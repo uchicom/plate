@@ -20,12 +20,9 @@ import com.uchicom.plate.cmd.AbstractCmd;
  */
 public class CmdSocketHandler implements Handler {
 
-    private static final ByteBuffer CMD_SET = ByteBuffer.wrap(new byte[] {
-            '\r', 'p', 'l', 'a', 't', 'e' });
-    private static final ByteBuffer PASS_SET = ByteBuffer.wrap(new byte[] {
-            '\r', 'P', 'a', 's', 's', 'w', 'o', 'r', 'd' });
-    private static final ByteBuffer CMD_PROMPT_SEPARATOR = ByteBuffer.wrap(new byte[] { ':' });
-    private static final ByteBuffer CMD_PROMPT = ByteBuffer.wrap(new byte[] { '>' });
+//    private static final ByteBuffer CMD_SET = ByteBuffer.wrap("\rplate".getBytes());
+//    private static final ByteBuffer CMD_PROMPT_SEPARATOR = ByteBuffer.wrap(new byte[] { ':' });
+//    private static final ByteBuffer CMD_PROMPT = ByteBuffer.wrap(new byte[] { '>' });
 
     private final ByteBuffer cmd = ByteBuffer.allocate(256);
     StringBuffer cmdBuff = new StringBuffer(256);
@@ -150,11 +147,11 @@ public class CmdSocketHandler implements Handler {
      */
     public void setCurrentPort(String currentPort) {
         this.currentPort = currentPort;
-        this.currentPortBuffer = ByteBuffer.wrap(currentPort.getBytes());
+//        this.currentPortBuffer = ByteBuffer.wrap(currentPort.getBytes());
     }
 
-    /** バッファー情報のカレントポート */
-    private ByteBuffer currentPortBuffer = null;
+//    /** バッファー情報のカレントポート */
+//    private ByteBuffer currentPortBuffer = null;
 
     /*
      * (non-Javadoc)
@@ -261,50 +258,50 @@ public class CmdSocketHandler implements Handler {
         }
         cmdBuff.append(">");
     }
-    /**
-     * 
-     * @param writer
-     * @throws IOException
-     */
-    private void writeCmdLine(SocketChannel socketChannel) throws IOException {
-        socketChannel.write(CMD_SET.asReadOnlyBuffer());
-        if (currentPort != null) {
-            socketChannel.write(CMD_PROMPT_SEPARATOR.asReadOnlyBuffer());
-            socketChannel.write(currentPortBuffer.asReadOnlyBuffer());
-        }
-        socketChannel.write(CMD_PROMPT.asReadOnlyBuffer());
-//        if (cmdBuff.length() > 0) {
-//            socketChannel.write(ByteBuffer.wrap((cmdBuff.toString()).getBytes()));
+//    /**
+//     * 
+//     * @param writer
+//     * @throws IOException
+//     */
+//    private void writeCmdLine(SocketChannel socketChannel) throws IOException {
+//        socketChannel.write(CMD_SET.asReadOnlyBuffer());
+//        if (currentPort != null) {
+//            socketChannel.write(CMD_PROMPT_SEPARATOR.asReadOnlyBuffer());
+//            socketChannel.write(currentPortBuffer.asReadOnlyBuffer());
 //        }
-    }
-    private void writeNextLine() {
-        
-    }
-    /**
-     * 
-     * @param writer
-     * @throws IOException
-     */
-    private void eraseChar(SocketChannel socketChannel) throws IOException {
-        byte[] bytes = null;
-        if (currentPort == null) {
-            bytes = new byte[1024];
-        } else {
-            bytes = new byte[1024];
-        }
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-        byteBuffer.put(CMD_SET.asReadOnlyBuffer());
-        if (currentPort != null) {
-            byteBuffer.put(CMD_PROMPT_SEPARATOR.asReadOnlyBuffer());
-            byteBuffer.put(currentPortBuffer.asReadOnlyBuffer());
-        }
-        byteBuffer.put(CMD_PROMPT.asReadOnlyBuffer());
-        if (cmdBuff.length() > 0) {
-            byteBuffer.put(ByteBuffer.wrap((cmdBuff.toString() + " ").getBytes()).asReadOnlyBuffer());
-        }
-        byteBuffer.flip();
-        socketChannel.write(byteBuffer);
-    }
+//        socketChannel.write(CMD_PROMPT.asReadOnlyBuffer());
+////        if (cmdBuff.length() > 0) {
+////            socketChannel.write(ByteBuffer.wrap((cmdBuff.toString()).getBytes()));
+////        }
+//    }
+//    private void writeNextLine() {
+//        
+//    }
+//    /**
+//     * 
+//     * @param writer
+//     * @throws IOException
+//     */
+//    private void eraseChar(SocketChannel socketChannel) throws IOException {
+//        byte[] bytes = null;
+//        if (currentPort == null) {
+//            bytes = new byte[1024];
+//        } else {
+//            bytes = new byte[1024];
+//        }
+//        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+//        byteBuffer.put(CMD_SET.asReadOnlyBuffer());
+//        if (currentPort != null) {
+//            byteBuffer.put(CMD_PROMPT_SEPARATOR.asReadOnlyBuffer());
+//            byteBuffer.put(currentPortBuffer.asReadOnlyBuffer());
+//        }
+//        byteBuffer.put(CMD_PROMPT.asReadOnlyBuffer());
+//        if (cmdBuff.length() > 0) {
+//            byteBuffer.put(ByteBuffer.wrap((cmdBuff.toString() + " ").getBytes()).asReadOnlyBuffer());
+//        }
+//        byteBuffer.flip();
+//        socketChannel.write(byteBuffer);
+//    }
 
     // 実行クラスとパラメータ引数の文字列長を抽出する
     boolean escape = false;

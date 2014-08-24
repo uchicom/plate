@@ -225,7 +225,7 @@ public class Commander implements Runnable {
 	 * plateを設定します。 
 	 * @param plate
 	 */
-	public void setMain(Main main) {
+	public void setMain(Main plate) {
 		this.plate = plate;
 	}
 

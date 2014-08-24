@@ -19,7 +19,7 @@ public class ConnectSocketHandler implements Handler {
     private static final ByteBuffer suppress = ByteBuffer.wrap(new byte[] { Telnet.IAC, Telnet.WILL, Telnet.SUPPRESS_GO_AHEAD});
     
     private static final ByteBuffer echoOff = ByteBuffer.wrap(new byte[] { Telnet.IAC, Telnet.WILL, Telnet.ECHO});
-    private static final ByteBuffer dontEcho = ByteBuffer.wrap(new byte[] { Telnet.IAC, Telnet.WONT, Telnet.ECHO});
+//    private static final ByteBuffer dontEcho = ByteBuffer.wrap(new byte[] { Telnet.IAC, Telnet.WONT, Telnet.ECHO});
     private static final ByteBuffer buffer = ByteBuffer
 			.wrap(new byte[] { 
 			        'W', 'e', 'l', 'c', 'o', 'm', ' ', 't', 'o',
