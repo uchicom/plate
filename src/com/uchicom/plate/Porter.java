@@ -29,39 +29,39 @@ public class Porter implements Runnable {
     private String address;
 	/** ポート情報 */
 	private String port = null;
-	
+
 	/** キー起動受付サーバー */
 	ServerSocketChannel server = null;
-	
+
 	/** セレクター */
 	Selector selector = null;
-	
-	/** 一石 */
+
+	/** plate */
 	Main plate = null;
-	
+
 	/** 起動時刻 */
 	long start = 0;
 
 	/** 登録されている別名情報リスト */
 	private List<KeyInfo> list = new ArrayList<KeyInfo>();
-	
+
 	/** ポートクローズ状態 */
 	public static final int STATUS_CLOSE = 0;
-	
+
 	/** ポートオープン状態 */
 	public static final int STATUS_OPEN = 1;
-	
+
 	/** ポートの状態 */
 	private int status = 0;
-	
+
 	/** ポートのクラスパスリスト */
 	private List<CpInfo> cpList = new ArrayList<CpInfo>();
-	
+
 	/** ポートのクラスローダー */
 	URLClassLoader classLoader = null;
-	
+
 	/**
-	 * 
+	 *
 	 * @param port
 	 * @param plate
 	 * @throws IOException
@@ -77,23 +77,23 @@ public class Porter implements Runnable {
 	    }
 		this.plate = plate;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
 		//サーバーソケットを作成する
-		try {
-			server = ServerSocketChannel.open();
+		try (ServerSocketChannel server = ServerSocketChannel.open();) {
+			this.server = server;
 			server.socket().setReuseAddress(true);
 			server.socket().bind(new InetSocketAddress(address, Integer.parseInt(port)));
 			server.configureBlocking(false);
-			
+
 			//セレクターを取得する
 			selector = Selector.open();
 			server.register(selector, SelectionKey.OP_ACCEPT, new PortServerHandler(plate, this));
-			
+
 			start = System.currentTimeMillis();
 			//常駐するため無限ループ
 			while (true) {
@@ -118,19 +118,10 @@ public class Porter implements Runnable {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			if (server != null) {
-				try {
-					server.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					server = null;
-				}
-			} 
 		}
+
 	}
-	
+
 	/**
 	 * サーバーを強制的にクローズする
 	 */
@@ -145,11 +136,11 @@ public class Porter implements Runnable {
 			}
 		}
 	}
-	
+
 
 
 	/**
-	 * listを取得します。 
+	 * listを取得します。
 	 * @return list
 	 */
 	public List<KeyInfo> getList() {
@@ -157,7 +148,7 @@ public class Porter implements Runnable {
 	}
 
 	/**
-	 * listを設定します。 
+	 * listを設定します。
 	 * @param list
 	 */
 	public void setList(List<KeyInfo> list) {
@@ -166,7 +157,7 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * statusを取得します。 
+	 * statusを取得します。
 	 * @return status
 	 */
 	public int getStatus() {
@@ -175,7 +166,7 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * statusを設定します。 
+	 * statusを設定します。
 	 * @param status
 	 */
 	public void setStatus(int status) {
@@ -184,7 +175,7 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * portを設定します。 
+	 * portを設定します。
 	 * @param port
 	 */
 	public void setPort(String port) {
@@ -193,7 +184,7 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * portを取得します。 
+	 * portを取得します。
 	 * @return port
 	 */
 	public String getPort() {
@@ -202,7 +193,7 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * cpListを取得します。 
+	 * cpListを取得します。
 	 * @return cpList
 	 */
 	public List<CpInfo> getCpList() {
@@ -211,41 +202,41 @@ public class Porter implements Runnable {
 
 
 	/**
-	 * cpListを設定します。 
+	 * cpListを設定します。
 	 * @param cpList
 	 */
 	public void setCpList(List<CpInfo> cpList) {
 		this.cpList = cpList;
 	}
-	
+
 
 	/**
-	 * 
+	 *
 	 * @param classPath
 	 */
 	public void addCp(CpInfo cpInfo) {
 		cpList.add(cpInfo);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param protocol
 	 * @param host
 	 * @param file
-	 * @throws MalformedURLException 
+	 * @throws MalformedURLException
 	 */
 	public void addCp(String protocol, String host, String file) throws MalformedURLException {
 		cpList.add(new CpInfo(protocol, host, file));
 	}
 
 	/**
-	 * 
+	 *
 	 * @param classPath
 	 */
 	public void removeCp(String iCp) {
 		cpList.remove(Integer.parseInt(iCp));
 	}
-	
+
 	public void build() {
 		if (cpList.size() > 0) {
 			classLoader = new URLClassLoader(CpInfo.toUrlArray(cpList, CpInfo.STATUS_INCLUDED));
@@ -254,9 +245,9 @@ public class Porter implements Runnable {
 			key.build();
 		}
 	}
-	
+
 	/** load時のビルド
-	 * 
+	 *
 	 */
 	public void initBuild() {
 		if (cpList.size() > 0) {
@@ -268,7 +259,7 @@ public class Porter implements Runnable {
 	}
 
 	/**
-	 * classLoaderを取得します。 
+	 * classLoaderを取得します。
 	 * @return classLoader
 	 */
 	public URLClassLoader getClassLoader() {
@@ -276,13 +267,13 @@ public class Porter implements Runnable {
 	}
 
 	/**
-	 * classLoaderを設定します。 
+	 * classLoaderを設定します。
 	 * @param classLoader
 	 */
 	public void setClassLoader(URLClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
-	
+
 	/**
 	 * クラスをロードする。
 	 * @param className

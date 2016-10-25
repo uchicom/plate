@@ -75,7 +75,7 @@ public class Main {
     /** ポート */
     private int port;
 
-    /** 一石の状態 */
+    /** plateの状態 */
     private int plateStatus;
 
     /** キー情報保持マップ */
@@ -635,10 +635,8 @@ public class Main {
      * @return
      */
     public boolean save(String fileName, String user, String pass) {
-        FileOutputStream fos = null;
 
-        try {
-            fos = new FileOutputStream(fileName);
+        try (FileOutputStream fos = new FileOutputStream(fileName);) {
             fos.write(user.getBytes());
             fos.write(' ');
             fos.write(Base64.encode(Crypt.encrypt3(user, pass)).getBytes());
@@ -709,17 +707,8 @@ public class Main {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    fos = null;
-                }
-            }
         }
+    
         return true;
     }
 

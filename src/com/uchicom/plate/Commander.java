@@ -1,4 +1,5 @@
 /**
+
  * (c) 2012 uchicom
  */
 package com.uchicom.plate;
@@ -153,10 +154,8 @@ public class Commander implements Runnable {
 	 * バッチ起動コマンド入力をひたすら待ち続ける。
 	 */
 	public void run() {
-		ServerSocketChannel serverChannel = null;
-		try {
-			//サーバーソケットを作成する
-			serverChannel =  ServerSocketChannel.open();
+		//サーバーソケットを作成する
+		try (ServerSocketChannel serverChannel = ServerSocketChannel.open();) {
 			serverChannel.socket().setReuseAddress(true);
 			//backはいくつか指定可能にしたほうが良いかな
 			serverChannel.socket().bind(new InetSocketAddress(address , port), 10);
@@ -185,18 +184,7 @@ public class Commander implements Runnable {
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		} finally {
-			if (serverChannel != null) {
-				try {
-					serverChannel.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					serverChannel = null;
-				}
-			}
 		}
-
 	}
 
 	/**

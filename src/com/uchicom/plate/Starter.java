@@ -110,10 +110,9 @@ public class Starter implements Runnable {
     			e.printStackTrace();
     		} catch (Throwable e) {
     		    e.printStackTrace();
-    		} finally {
-    			end = System.currentTimeMillis();
-    			shutdown(null);
     		}
+			end = System.currentTimeMillis();
+			shutdown(null);
 	    }
 	}
 
@@ -194,12 +193,10 @@ public class Starter implements Runnable {
     		} catch (InvocationTargetException e) {
     			e.printStackTrace();
     			System.err.print(e.getMessage());
-    		} finally {
     		}
 	    } else {
 	        end = System.currentTimeMillis();
 	    }
-	    startingKey.getStarterList().remove(this);
 	}
 
 	/**

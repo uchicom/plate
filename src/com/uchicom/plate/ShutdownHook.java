@@ -10,7 +10,7 @@ package com.uchicom.plate;
  */
 public class ShutdownHook extends Thread {
 
-    /** 一石 */
+    /** plate */
     private Main plate;
     
     /**
