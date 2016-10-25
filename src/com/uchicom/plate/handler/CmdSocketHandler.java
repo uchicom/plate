@@ -16,7 +16,7 @@ import com.uchicom.plate.cmd.AbstractCmd;
 
 /**
  * @author Uchiyama Shigeki
- * 
+ *
  */
 public class CmdSocketHandler implements Handler {
 
@@ -36,7 +36,7 @@ public class CmdSocketHandler implements Handler {
     private SocketChannel socketChannel;
 
     /**
-     * 
+     *
      * @param socketChannel
      */
     public CmdSocketHandler(SocketChannel socketChannel) {
@@ -52,7 +52,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * passを取得します。
-     * 
+     *
      * @return pass
      */
     public String getPass() {
@@ -61,7 +61,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * passを設定します。
-     * 
+     *
      * @param pass
      */
     public void setPass(String pass) {
@@ -70,7 +70,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * userを取得します。
-     * 
+     *
      * @return user
      */
     public String getUser() {
@@ -79,7 +79,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * userを設定します。
-     * 
+     *
      * @param user
      */
     public void setUser(String user) {
@@ -91,7 +91,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * bUserを取得します。
-     * 
+     *
      * @return bUser
      */
     public boolean isbUser() {
@@ -100,7 +100,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * bUserを設定します。
-     * 
+     *
      * @param bUser
      */
     public void setbUser(boolean bUser) {
@@ -112,7 +112,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * bPassを取得します。
-     * 
+     *
      * @return bPass
      */
     public boolean isbPass() {
@@ -121,7 +121,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * bPassを設定します。
-     * 
+     *
      * @param bPass
      */
     public void setbPass(boolean bPass) {
@@ -133,7 +133,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * currentPortを取得します。
-     * 
+     *
      * @return currentPort
      */
     public String getCurrentPort() {
@@ -142,7 +142,7 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * currentPortを設定します。
-     * 
+     *
      * @param currentPort
      */
     public void setCurrentPort(String currentPort) {
@@ -155,21 +155,18 @@ public class CmdSocketHandler implements Handler {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.uchicom.plate.Handler#handle(java.nio.channels.SelectionKey)
      */
     @Override
     public void handle(SelectionKey key) throws IOException {
 
-        System.out.println("ループ");
         if (!key.isValid()) {
-            System.out.println("生きてる？");
             socketChannel.finishConnect();
         }
-        
-        
+
+
         if (key.isReadable()) {
-            System.out.println("読める？");
             try {
                 SocketChannel socketChannel = (SocketChannel) key.channel();
                 // \r\nまで読み込み続ける
@@ -196,7 +193,7 @@ public class CmdSocketHandler implements Handler {
                                 if (cmd.checkAuth(this)) {
                                     // パラメータチェックしてエラーだったら
                                     if (cmd.checkParam(this, params)) {
-                                        // 
+                                        //
                                         if (cmd.checkConfirm()) {
                                             resBuff.append("execute ok ? yes/[no]\r\n");
                                         }
@@ -224,7 +221,6 @@ public class CmdSocketHandler implements Handler {
                     writeCmdLine(resBuff);
                 }
                 if (key.isValid() && resBuff.length() > 0) {
-                    System.out.println("ここは？");
                     // コマンドラインの読み込み完了時に書き込み開始
                     key.interestOps(SelectionKey.OP_WRITE);
                 }
@@ -236,12 +232,11 @@ public class CmdSocketHandler implements Handler {
 
         // 書き込みOKの場合は書き込む
         if (key.isValid() && key.isWritable()) {
-            System.out.println("ここにきてる？");
             SocketChannel socketChannel = (SocketChannel) key.channel();
             // 書き込むデータない場合は監視をやめる。
             if (resBuff.length() == 0) {
 //                // 次のコマンドライン読み込み
-//                
+//
             } else {
                 // 書き込むデータがあれば書き込む
                 writeMessage(socketChannel);
@@ -259,7 +254,7 @@ public class CmdSocketHandler implements Handler {
         cmdBuff.append(">");
     }
 //    /**
-//     * 
+//     *
 //     * @param writer
 //     * @throws IOException
 //     */
@@ -275,10 +270,10 @@ public class CmdSocketHandler implements Handler {
 ////        }
 //    }
 //    private void writeNextLine() {
-//        
+//
 //    }
 //    /**
-//     * 
+//     *
 //     * @param writer
 //     * @throws IOException
 //     */
@@ -362,13 +357,17 @@ public class CmdSocketHandler implements Handler {
 
     /**
      * データを書き込んで0に設定
-     * 
+     *
      * @param socketChannel
      * @throws IOException
      */
     private void writeMessage(SocketChannel socketChannel) throws IOException {
-        socketChannel.write(ByteBuffer.wrap(resBuff.toString().getBytes()));
-        resBuff.setLength(0);
+    	int maxByte = 1024;
+    	if (resBuff.length() < maxByte) {
+    		maxByte = resBuff.length();
+    	}
+        socketChannel.write(ByteBuffer.wrap(resBuff.substring(0, maxByte).getBytes()));
+        resBuff.delete(0, maxByte);
     }
 
 }

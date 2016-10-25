@@ -18,9 +18,9 @@ import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
  * 登録されている情報を表示するコマンド
- * 
+ *
  * @author Uchiyama Shigeki
- * 
+ *
  */
 public class ListCmd extends AbstractCmd {
 
@@ -36,7 +36,7 @@ public class ListCmd extends AbstractCmd {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.uchicom.plate.cmd.Cmd#getHelp()
      */
     @Override
@@ -46,7 +46,7 @@ public class ListCmd extends AbstractCmd {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
      * CmdSocketHandler, java.lang.String[])
      */
@@ -78,7 +78,7 @@ public class ListCmd extends AbstractCmd {
                     strBuff.append(cpInfo);
                 }
                 strBuff.append("\r\n");
-                // 別名情報
+                // 起動情報
                 for (KeyInfo startingKey : ent.getValue().getList()) {
                     strBuff.append(startingKey);
                 }

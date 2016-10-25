@@ -10,9 +10,9 @@ import java.util.Date;
 
 /**
  * 起動クラス
- * 
+ *
  * @author Uchiyama Shigeki
- * 
+ *
  */
 public class Starter implements Runnable {
 
@@ -20,12 +20,12 @@ public class Starter implements Runnable {
 	private KeyInfo startingKey;
 	/**  */
 	private String[] params;
-	
+
 	/** 実行クラス保持用 */
 	private Class<?> classObject;
 
 	/**
-	 * paramsを取得します。 
+	 * paramsを取得します。
 	 * @return params
 	 */
 	public String[] getParams() {
@@ -33,7 +33,7 @@ public class Starter implements Runnable {
 	}
 
 	/**
-	 * paramsを設定します。 
+	 * paramsを設定します。
 	 * @param params
 	 */
 	public void setParams(String[] params) {
@@ -44,27 +44,27 @@ public class Starter implements Runnable {
 	private long start;
 	/**  */
 	private long end;
-	
+
 	private long recoveryCount;
-	
+
 	private boolean finish;
 	private boolean started;
 	/**  */
 	public static final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
-	
+
 	/** 起動元のソース */
 	private int source;
-	
+
 	/** コマンドで実行 */
 	public static int CMD = 0x1;
-	
+
 	/** ポートからキー呼び出し */
 	public static int PORT = 0x2;
-	
+
 	/** 設定ファイルから呼び出し */
 	public static int INIT = 0x4;
 
-	/** 
+	/**
 	 */
 	public boolean isAlive() {
 		return started && !finish;
@@ -74,7 +74,7 @@ public class Starter implements Runnable {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param startingKey
 	 * @param params
 	 * @param plate
@@ -87,7 +87,7 @@ public class Starter implements Runnable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
@@ -163,7 +163,7 @@ public class Starter implements Runnable {
 	}
 
 	public void shutdown() {
-	    
+
 	}
 	/**
 	 * 実行プログラムを終了する
@@ -199,10 +199,11 @@ public class Starter implements Runnable {
 	    } else {
 	        end = System.currentTimeMillis();
 	    }
+	    startingKey.getStarterList().remove(this);
 	}
 
-	/** 
-	 * 
+	/**
+	 *
 	 * @param params
 	 * @throws SecurityException
 	 * @throws NoSuchMethodException
@@ -219,7 +220,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * 
+     *
      * @param methodName
      * @param params
      * @throws ClassNotFoundException
@@ -249,7 +250,7 @@ public class Starter implements Runnable {
 
 	/**
 	 * startingKeyを取得します。
-	 * 
+	 *
 	 * @return startingKey
 	 */
 	public KeyInfo getStartingKey() {
@@ -258,7 +259,7 @@ public class Starter implements Runnable {
 
 	/**
 	 * startingKeyを設定します。
-	 * 
+	 *
 	 * @param startingKey
 	 */
 	public void setStartingKey(KeyInfo startingKey) {
@@ -266,7 +267,7 @@ public class Starter implements Runnable {
 	}
 
     /**
-     * sourceを取得します。 
+     * sourceを取得します。
      * @return source
      */
     public int getSource() {
@@ -274,7 +275,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * sourceを設定します。 
+     * sourceを設定します。
      * @param source
      */
     public void setSource(int source) {
@@ -282,7 +283,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * finishを取得します。 
+     * finishを取得します。
      * @return finish
      */
     public boolean isFinish() {
@@ -290,7 +291,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * finishを設定します。 
+     * finishを設定します。
      * @param finish
      */
     public void setFinish(boolean finish) {
@@ -298,7 +299,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * recoveryCountを取得します。 
+     * recoveryCountを取得します。
      * @return recoveryCount
      */
     public long getRecoveryCount() {
@@ -306,7 +307,7 @@ public class Starter implements Runnable {
     }
 
     /**
-     * recoveryCountを設定します。 
+     * recoveryCountを設定します。
      * @param recoveryCount
      */
     public void setRecoveryCount(long recoveryCount) {
