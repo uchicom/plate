@@ -1,0 +1,8 @@
+
+vscode:
+  extensions:
+    - redhat.java
+    - vscjava.vscode-maven
+    - vscjava.vscode-java-debug
+    - donjayamanne.githistory
+    - github.vscode-pull-request-github
