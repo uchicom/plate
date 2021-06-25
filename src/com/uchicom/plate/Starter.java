@@ -112,7 +112,6 @@ public class Starter implements Runnable {
     		    e.printStackTrace();
     		}
 			end = System.currentTimeMillis();
-			shutdown(null);
 	    }
 	}
 
@@ -162,7 +161,32 @@ public class Starter implements Runnable {
 	}
 
 	public void shutdown() {
-
+		if (!started) {
+			end = System.currentTimeMillis();
+			finish = true;
+		} else if (!finish) {
+			try {
+				Method method = classObject.getMethod("shutdown");
+				method.invoke(classObject);
+			} catch (SecurityException e) {
+				e.printStackTrace();
+				System.err.print(e.getMessage());
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+				System.err.print(e.getMessage());
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				System.err.print(e.getMessage());
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				System.err.print(e.getMessage());
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+				System.err.print(e.getMessage());
+			}
+		} else {
+			end = System.currentTimeMillis();
+		}
 	}
 	/**
 	 * 実行プログラムを終了する

@@ -162,15 +162,12 @@ public class CmdSocketHandler implements Handler {
     @Override
     public void handle(SelectionKey key) throws IOException {
 
-        System.out.println("ループ");
         if (!key.isValid()) {
-            System.out.println("生きてる？");
             socketChannel.finishConnect();
         }
         
         
         if (key.isReadable()) {
-            System.out.println("読める？");
             try {
                 SocketChannel socketChannel = (SocketChannel) key.channel();
                 // \r\nまで読み込み続ける
@@ -225,7 +222,6 @@ public class CmdSocketHandler implements Handler {
                     writeCmdLine(resBuff);
                 }
                 if (key.isValid() && resBuff.length() > 0) {
-                    System.out.println("ここは？");
                     // コマンドラインの読み込み完了時に書き込み開始
                     key.interestOps(SelectionKey.OP_WRITE);
                 }
@@ -237,7 +233,6 @@ public class CmdSocketHandler implements Handler {
 
         // 書き込みOKの場合は書き込む
         if (key.isValid() && key.isWritable()) {
-            System.out.println("ここにきてる？");
             SocketChannel socketChannel = (SocketChannel) key.channel();
             // 書き込むデータない場合は監視をやめる。
             if (resBuff.length() == 0) {
@@ -332,9 +327,7 @@ public class CmdSocketHandler implements Handler {
                     }
                     cmdBuff.setLength(cmdBuff.length() - 1);
                 }
-                System.out.println("BSですよ");
             } else if (ch < 0x0 || ch == '\n' || ch == '\r') {
-                System.out.println("\\r\\nですよ");
                 resBuff.append("\r\n");
                 lineEnd = true;
                 break;
@@ -350,11 +343,11 @@ public class CmdSocketHandler implements Handler {
                     }
                 }
             } else if (0x7F == ch) {
-                System.out.println("7Fですよ");
+                System.out.println("7F");
                 //なにもしていない
             } else {
 
-                System.out.println("その他ですよ");
+                System.out.println("other");
             }
         }
         cmd.clear();

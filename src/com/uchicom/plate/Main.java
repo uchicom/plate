@@ -276,7 +276,11 @@ public class Main {
                     for (Starter starter : startingKey.getStarterList()) {
                         if (!starter.isFinish()) {
                             try {
-                                starter.shutdown(params);
+                            	if (params.length == 0) {
+                            		starter.shutdown();
+                            	} else {
+                            		starter.shutdown(params);
+                            	}
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -789,8 +793,7 @@ public class Main {
                 for (Starter starter : key.getStarterList()) {
                     if (!starter.isFinish()) {
                         try {
-                            //文字列送信テスト
-                            starter.shutdown(new String[] {"test1", "test2"});
+                    		 starter.shutdown();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
