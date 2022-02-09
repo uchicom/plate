@@ -3,6 +3,7 @@ package com.uchicom.plate;
 
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
+import com.uchicom.util.Parameter;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,6 +36,8 @@ public class Main {
 
   public static final String DEFAULT_ADDRESS = "localhost";
 
+  public Timer timer = new Timer();
+
   /**
    * コマンド引数を使用してサーバーを起動する。 ポート番号を指定してコマンドを受け付けるポート番号を指定する。
    * 任意でデフォルトの設定ファイル名を指定する。指定されている場合は設定ファイルをロードする。
@@ -41,7 +45,14 @@ public class Main {
    * @param args
    */
   public static void main(String[] args) {
+    Parameter parameter = new Parameter(args);
     Main plate = null;
+
+    if (parameter.is("file")) {
+
+    } else {
+
+    }
     if (args.length > 0) {
       // コマンドプロンプトのポートとデフォルトの設定ファイルを読み込む
       String[] addresses = args[0].split(":");
