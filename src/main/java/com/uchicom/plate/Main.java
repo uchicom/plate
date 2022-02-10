@@ -5,6 +5,7 @@ import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -48,25 +49,23 @@ public class Main {
     Parameter parameter = new Parameter(args);
     Main plate = null;
 
-    if (parameter.is("file")) {
+    if (parameter.is("file") && parameter.is("port")) {
 
     } else {
 
     }
-    if (args.length > 0) {
-      // コマンドプロンプトのポートとデフォルトの設定ファイルを読み込む
-      String[] addresses = args[0].split(":");
-      if (addresses.length == 2) {
-        plate = new Main(addresses[0], Integer.parseInt(addresses[1]));
-      } else if (addresses.length == 1) {
-        plate = new Main(Integer.parseInt(args[0]));
+    if (parameter.is("port")) {
+      if (parameter.is("host")) {
+        plate = new Main(parameter.get("host"), parameter.getInt("port"));
+      } else {
+        plate = new Main(parameter.getInt("port"));
       }
     } else {
       plate = new Main();
     }
-    if (args.length > 1) {
+    if (parameter.is("file")) {
       // 設定ファイルロード処理
-      plate.load(args[1]);
+      plate.load(parameter.getFile("file"));
     }
     Runtime.getRuntime().addShutdownHook(new ShutdownHook(plate));
     plate.execute();
@@ -93,7 +92,7 @@ public class Main {
   /** ユーザー名 */
   private String user;
 
-  private String loadFile;
+  private File loadFile;
 
   /**
    * userを取得します。
@@ -433,10 +432,10 @@ public class Main {
    * @param fileName
    * @return
    */
-  public boolean load(String fileName) {
+  public boolean load(File file) {
     BufferedReader br = null;
     try {
-      loadFile = fileName;
+      loadFile = file;
       br = new BufferedReader(new InputStreamReader(new FileInputStream(loadFile)));
       String line = br.readLine();
       Porter tmpPorter = null;
@@ -617,9 +616,9 @@ public class Main {
    * @param fileName
    * @return
    */
-  public boolean save(String fileName, String user, String pass) {
+  public boolean save(File file, String user, String pass) {
 
-    try (FileOutputStream fos = new FileOutputStream(fileName); ) {
+    try (FileOutputStream fos = new FileOutputStream(file); ) {
       fos.write(user.getBytes());
       fos.write(' ');
       fos.write(Base64.encode(Crypt.encrypt3(user, pass)).getBytes());
@@ -1005,7 +1004,7 @@ public class Main {
     return true;
   }
 
-  public String getLoadFile() {
+  public File getLoadFile() {
     return loadFile;
   }
 }

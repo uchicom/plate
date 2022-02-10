@@ -4,6 +4,7 @@ package com.uchicom.plate.cmd.util;
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
+import java.io.File;
 
 /**
  * 設定を保存するコマンド。
@@ -54,7 +55,7 @@ public class SaveCmd extends AbstractCmd {
   @Override
   public boolean execute(CmdSocketHandler handler, String[] params) {
     if (params.length == 1) {
-      return broker.getMain().save(params[0], handler.getUser(), handler.getPass());
+      return broker.getMain().save(new File(params[0]), handler.getUser(), handler.getPass());
     } else if (params.length == 0) {
       return broker.getMain().save(handler.getUser(), handler.getPass());
     } else {
