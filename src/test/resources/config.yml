@@ -1,0 +1,25 @@
+user: testUser
+hash: testPassword
+service:
+  services:
+    - key: server1 # require
+      className: com.uchicom.hoge.Main # require
+      startMethod: main # default main
+      shutdownMethod: shutdown
+      parameters: [a, b, c, d] 
+      disabled: false # default false
+      recovery: true # default true
+batch:
+  batches:
+    - key: batch1 # require
+      className: com.uchicom.hoge.Main # require
+      startMethod: main # default main
+      parameters: [a, b, c, d]
+      disabled: false  # default false
+      schedule: 
+        cron: [1,2,3,4,5] 
+        minute:
+        hour:
+        day:
+        month:
+        dayOfWeek: 未対応 スケジュールする際に

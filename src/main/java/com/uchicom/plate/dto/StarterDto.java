@@ -1,0 +1,14 @@
+// (C) 2022 uchicom
+package com.uchicom.plate.dto;
+
+import java.util.List;
+
+public class StarterDto {
+  public String key;
+  public List<String> classPath;
+  public String className;
+  public String startMethod;
+  public String shutdownMethod;
+  public String[] parameters;
+  public boolean disabled;
+}

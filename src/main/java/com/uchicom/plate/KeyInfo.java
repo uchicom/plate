@@ -1,7 +1,6 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -204,11 +203,8 @@ public class KeyInfo {
     return starter;
   }
 
-  /**
-   * @param classPath
-   * @throws IOException
-   */
-  public void addCp(CpInfo cpInfo) throws IOException {
+  /** @param classPath */
+  public void addCp(CpInfo cpInfo) {
     cpList.add(cpInfo);
   }
 

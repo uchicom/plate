@@ -1,16 +1,16 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * plateサーバーのメインクラス 全てを同一のスレッドプールで管理する。メインクラスは
@@ -49,11 +50,6 @@ public class Main {
     Parameter parameter = new Parameter(args);
     Main plate = null;
 
-    if (parameter.is("file") && parameter.is("port")) {
-
-    } else {
-
-    }
     if (parameter.is("port")) {
       if (parameter.is("host")) {
         plate = new Main(parameter.get("host"), parameter.getInt("port"));
@@ -67,6 +63,9 @@ public class Main {
       // 設定ファイルロード処理
       plate.load(parameter.getFile("file"));
     }
+
+    // セキュリティーマネージャーの設定
+    plate.setSecurity();
     Runtime.getRuntime().addShutdownHook(new ShutdownHook(plate));
     plate.execute();
   }
@@ -93,6 +92,8 @@ public class Main {
   private String user;
 
   private File loadFile;
+
+  PlateConfig config;
 
   /**
    * userを取得します。
@@ -159,8 +160,6 @@ public class Main {
     this.address = address;
     this.port = port;
     exec = Executors.newFixedThreadPool(pool);
-    // セキュリティーマネージャーの設定
-    setSecurity();
   }
 
   /** セキュリティマネージャーでexitをSecurityExceptionにする。 */
@@ -426,6 +425,16 @@ public class Main {
     return false;
   }
 
+  PlateConfig loadConfig(File file) {
+    try {
+      return new Yaml()
+          .loadAs(
+              new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8),
+              PlateConfig.class);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
   /**
    * 認証なしで設定ファイルをロードする。
    *
@@ -433,95 +442,98 @@ public class Main {
    * @return
    */
   public boolean load(File file) {
-    BufferedReader br = null;
-    try {
-      loadFile = file;
-      br = new BufferedReader(new InputStreamReader(new FileInputStream(loadFile)));
-      String line = br.readLine();
-      Porter tmpPorter = null;
-      // パスワードチェック
-      String[] params = line.trim().split(" ");
-      if (params.length == 2) {
-        // ユーザー名をセット
-        this.user = params[0];
-        // パスワードをセット
-        this.cryptPass = params[1];
-        line = br.readLine();
-        while (line != null) {
-          params = line.trim().split(" ");
-          if (line.startsWith("   ")) {
-            // スタートパラメータ一覧
-            KeyInfo keyInfo = tmpPorter.getList().get(tmpPorter.getList().size() - 1);
-            if (params.length == 1 && "".equals(params[0])) {
-              keyInfo.create(new String[0], Starter.INIT);
-            } else {
-              keyInfo.create(params, Starter.INIT);
-            }
-          } else if (line.startsWith("  ")) {
-            // クラスパス(キーまたはポートの)
-            if (tmpPorter.getList().size() > 0) {
-              // キーのクラスパス(インクルードエクスクルード)
-              CpInfo cpInfo = new CpInfo(params[0]);
-              tmpPorter.getList().get(tmpPorter.getList().size() - 1).addCp(cpInfo);
-              if (params.length > 2 && params[1].equals("I")) {
-                cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-              }
-            } else {
-              // ポートのクラスパス(インクルードエクスクルード)
-              CpInfo cpInfo = new CpInfo(params[0]);
-              tmpPorter.addCp(cpInfo);
-              if (params.length > 2 && params[1].equals("I")) {
-                cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-              }
-            }
-          } else if (line.startsWith(" ")) {
-            // キー(イネーブルディスエーブル)
-            KeyInfo startKey = new KeyInfo(params[0], params[1], params[2]);
-            startKey.setPorter(tmpPorter);
-            tmpPorter.getList().add(startKey);
-            if (params.length > 3 && "E".equals(params[3])) {
-              startKey.setStatus(KeyInfo.STATUS_ENABLE);
-            }
-            if (params.length > 4 && "A".equals(params[4])) {
-              startKey.setRecovery(KeyInfo.AUTO);
-            }
-          } else {
-            // ポート(オープンクローズ)
-            tmpPorter = new Porter(params[0], this);
-            portMap.put(params[0], tmpPorter);
-            if (params.length > 1 && "O".equals(params[1])) {
-              tmpPorter.setStatus(Porter.STATUS_OPEN);
-            }
-          }
-          line = br.readLine();
-        }
-
-        // ポートのオープン処理
-        Iterator<Entry<String, Porter>> ite = portMap.entrySet().iterator();
-        while (ite.hasNext()) {
-          Entry<String, Porter> ent = ite.next();
-          build(ent.getKey());
-          if (ent.getValue().getStatus() == Porter.STATUS_OPEN) {
-            openPort(ent.getKey(), false);
-          }
-          // スターターの起動処理
-          for (KeyInfo keyInfo : ent.getValue().getList()) {
-            for (Starter starter : keyInfo.getStarterList()) {
-              start(starter);
-            }
-          }
-        }
-
-      } else {
-        br.close();
-        return false;
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    loadFile = file;
+    config = loadConfig(file);
+    init(config);
     return true;
+  }
+
+  void init(PlateConfig config) {
+    this.user = config.user;
+    this.cryptPass = config.hash;
+    if (config.service != null) {
+      Porter servicePorter = new Porter("service", this);
+      portMap.put("service", servicePorter);
+      if (config.service.classPath != null) {
+        config.service.classPath.forEach(
+            classPath -> {
+              CpInfo cpInfo = new CpInfo(classPath);
+              servicePorter.addCp(cpInfo);
+              cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+            });
+      }
+      if (config.service.services != null) {
+        config.service.services.forEach(
+            service -> {
+              KeyInfo startKey = new KeyInfo(service.key, service.className, service.startMethod);
+              startKey.setPorter(servicePorter);
+              servicePorter.getList().add(startKey);
+              if (service.classPath != null) {
+                service.classPath.forEach(
+                    classPath -> {
+                      CpInfo cpInfo = new CpInfo(classPath);
+                      startKey.addCp(cpInfo);
+                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                    });
+              }
+              if (!service.disabled) {
+                startKey.setStatus(KeyInfo.STATUS_ENABLE);
+              }
+              if (service.recovery) {
+                startKey.setRecovery(KeyInfo.AUTO);
+              }
+              startKey.create(service.parameters, Starter.INIT);
+            });
+      }
+
+      servicePorter.build();
+      servicePorter
+          .getList()
+          .forEach(
+              keyInfo -> {
+                for (Starter starter : keyInfo.getStarterList()) {
+                  start(starter);
+                }
+              });
+    }
+    if (config.batch != null) {
+      Porter batchPorter = new Porter("9900", this);
+      portMap.put("9900", batchPorter);
+      if (config.batch.classPath != null) {
+        config.batch.classPath.forEach(
+            classPath -> {
+              CpInfo cpInfo = new CpInfo(classPath);
+              batchPorter.addCp(cpInfo);
+              cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+            });
+      }
+      if (config.batch.batches != null) {
+        config.batch.batches.forEach(
+            batch -> {
+              KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.startMethod);
+              startKey.setPorter(batchPorter);
+              batchPorter.getList().add(startKey);
+              if (batch.classPath != null) {
+                batch.classPath.forEach(
+                    classPath -> {
+                      CpInfo cpInfo = new CpInfo(classPath);
+                      startKey.addCp(cpInfo);
+                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                    });
+              }
+              if (!batch.disabled) {
+                startKey.setStatus(KeyInfo.STATUS_ENABLE);
+              }
+              if (batch.schedule != null) {
+                // TODO ここでTimer登録する
+              }
+            });
+      }
+
+      batchPorter.build();
+      new Thread(batchPorter).start();
+      batchPorter.setStatus(Porter.STATUS_OPEN);
+    }
   }
 
   /**
@@ -531,80 +543,14 @@ public class Main {
    * @return
    */
   public boolean load(String fileName, String user, String pass) {
-    BufferedReader br = null;
-    try {
-      br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-      String line = br.readLine();
-      Porter tmpPorter = null;
-      // パスワードチェック
-      String[] params = line.trim().split(" ");
-      String cryptPass = Base64.encode(Crypt.encrypt3(user, pass));
-      if (params.length == 2 && params[0].equals(user) && params[1].equals(cryptPass)) {
-        // ユーザー名をセット
-        this.user = user;
-        // パスワードをセット
-        this.cryptPass = cryptPass;
-        line = br.readLine();
-        while (line != null && !"".equals(line.trim())) {
-          params = line.trim().split(" ");
-          if (line.startsWith("  ")) {
-            // クラスパス(キーまたはポートの)
-            if (tmpPorter.getList().size() > 0) {
-              // キーのクラスパス(インクルードエクスクルード)
-              CpInfo cpInfo = new CpInfo(params[0]);
-              tmpPorter.getList().get(tmpPorter.getList().size() - 1).addCp(cpInfo);
-              if (params.length > 2 && params[1].equals("I")) {
-                cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-              }
-            } else {
-              // ポートのクラスパス(インクルードエクスクルード)
-              CpInfo cpInfo = new CpInfo(params[0]);
-              tmpPorter.addCp(cpInfo);
-              if (params.length > 2 && params[1].equals("I")) {
-                cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-              }
-            }
-          } else if (line.startsWith(" ")) {
-            // キー(イネーブル:ディスエーブル,リカバリーオートマニュアル)
-            KeyInfo startKey = new KeyInfo(params[0], params[1], params[2]);
-            startKey.setPorter(tmpPorter);
-            tmpPorter.getList().add(startKey);
-            if (params.length > 3 && "E".equals(params[3])) {
-              startKey.setStatus(KeyInfo.STATUS_ENABLE);
-            }
-            if (params.length > 4 && "A".equals(params[4])) {
-              startKey.setRecovery(KeyInfo.AUTO);
-            }
-          } else {
-            // ポート(オープンクローズ)
-            tmpPorter = new Porter(params[0], this);
-            portMap.put(params[0], tmpPorter);
-            if (params.length > 1 && "O".equals(params[1])) {
-              tmpPorter.setStatus(Porter.STATUS_OPEN);
-            }
-          }
-          line = br.readLine();
-        }
-
-        // ポートのオープン処理
-        Iterator<Entry<String, Porter>> ite = portMap.entrySet().iterator();
-        while (ite.hasNext()) {
-          Entry<String, Porter> ent = ite.next();
-          build(ent.getKey());
-          if (ent.getValue().getStatus() == Porter.STATUS_OPEN) {
-            openPort(ent.getKey(), false);
-          }
-        }
-      } else {
-        br.close();
-        return false;
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
+    PlateConfig config = loadConfig(loadFile);
+    String cryptPass = Base64.encode(Crypt.encrypt3(user, pass));
+    if (config.user.equals(user) && config.hash.equals(cryptPass)) {
+      init(config);
+      loadFile = new File(fileName);
+      return true;
     }
-    return true;
+    return false;
   }
 
   public boolean save(String user, String pass) {
@@ -614,79 +560,17 @@ public class Main {
    * 設定を保存する。
    *
    * @param fileName
-   * @return
+   * @return 成功した場合はtrue,それ以外はfalse
    */
   public boolean save(File file, String user, String pass) {
-
-    try (FileOutputStream fos = new FileOutputStream(file); ) {
-      fos.write(user.getBytes());
-      fos.write(' ');
-      fos.write(Base64.encode(Crypt.encrypt3(user, pass)).getBytes());
-      fos.write("\r\n".getBytes());
-      fos.flush();
-      Set<Entry<String, Porter>> set = portMap.entrySet();
-      Iterator<Entry<String, Porter>> ite = set.iterator();
-      while (ite.hasNext()) {
-        Entry<String, Porter> entry = ite.next();
-        // ポート情報
-        Porter porter = entry.getValue();
-        fos.write(porter.getPort().getBytes());
-        fos.write(' ');
-        fos.write(porter.getStatus() == Porter.STATUS_CLOSE ? 'C' : 'O');
-        fos.write("\r\n".getBytes());
-        fos.flush();
-        // ポートクラスパス情報
-        for (CpInfo cpInfo : porter.getCpList()) {
-          fos.write("  ".getBytes());
-          fos.write(cpInfo.getUrl().toString().getBytes());
-          fos.write(' ');
-          fos.write(cpInfo.getStatus() == CpInfo.STATUS_EXCLUDED ? 'E' : 'I');
-          fos.write("\r\n".getBytes());
-          fos.flush();
-        }
-        // 別名情報
-        for (KeyInfo startKey : porter.getList()) {
-          fos.write(' ');
-          fos.write(startKey.getKey().getBytes());
-          fos.write(' ');
-          fos.write(startKey.getClassName().getBytes());
-          fos.write(' ');
-          fos.write(startKey.getMethodName().getBytes());
-          fos.write(' ');
-          fos.write(startKey.getStatus() == KeyInfo.STATUS_DISABLE ? 'D' : 'E');
-          fos.write(' ');
-          fos.write(startKey.getRecovery() == KeyInfo.AUTO ? 'A' : 'M');
-          fos.write("\r\n".getBytes());
-          fos.flush();
-          // 別名クラスパス情報
-          for (CpInfo cpInfo : startKey.getCpList()) {
-            fos.write("  ".getBytes());
-            fos.write(cpInfo.getUrl().toString().getBytes());
-            fos.write(' ');
-            fos.write(cpInfo.getStatus() == CpInfo.STATUS_EXCLUDED ? 'E' : 'I');
-            fos.write("\r\n".getBytes());
-            fos.flush();
-          }
-          // 起動情報(aliveのものを保存する)
-          for (Starter starter : startKey.getStarterList()) {
-            if (starter.isAlive()) {
-              fos.write("   ".getBytes());
-              for (String param : starter.getParams()) {
-                fos.write(param.getBytes());
-                fos.write(" ".getBytes());
-              }
-              fos.write("\r\n".getBytes());
-              fos.flush();
-            }
-          }
-        }
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
+      config.user = user;
+      config.hash = Base64.encode(Crypt.encrypt3(user, pass));
+      new Yaml().dump(config, writer);
     } catch (IOException e) {
       e.printStackTrace();
+      return false;
     }
-
     return true;
   }
 
