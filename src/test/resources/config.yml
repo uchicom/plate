@@ -17,9 +17,9 @@ batch:
       parameters: [a, b, c, d]
       disabled: false  # default false
       schedule: 
-        cron: [1,2,3,4,5] 
+        cron: 1 2 3 4 5
         minute:
         hour:
         day:
         month:
-        dayOfWeek: 未対応 スケジュールする際に
+        dayOfWeek: #未対応 スケジュールする際に

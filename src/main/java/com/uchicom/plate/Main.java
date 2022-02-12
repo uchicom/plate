@@ -1,7 +1,11 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
+import com.uchicom.plate.scheduler.Schedule;
+import com.uchicom.plate.scheduler.ScheduleFactory;
+import com.uchicom.plate.scheduler.cron.CronParser;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
@@ -25,7 +29,7 @@ import java.util.concurrent.Executors;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * plateサーバーのメインクラス 全てを同一のスレッドプールで管理する。メインクラスは
+ * serverとbatchを管理するミドルウェア.
  *
  * @author Uchiyama Shigeki
  */
@@ -85,15 +89,14 @@ public class Main {
   /** キー情報保持マップ */
   private Map<String, Porter> portMap = new HashMap<String, Porter>();
 
-  /** ポート情報保持リスト */
-  // private Map<String, Porter> porterMap = new HashMap<String, Porter>();
-
   /** ユーザー名 */
   private String user;
 
   private File loadFile;
 
   PlateConfig config;
+
+  ScheduleFactory scheduleFactory = new ScheduleFactory(new CronParser());
 
   /**
    * userを取得します。
@@ -166,14 +169,14 @@ public class Main {
   protected void setSecurity() {
     System.setSecurityManager(
         new SecurityManager() {
-          /** */
+          @Override
           public void checkPermission(Permission perm) {
             if ("setSecurityManager".equals(perm.getName())) {
               throw new SecurityException("setSecurityManager is no permission.");
             }
           }
 
-          /** */
+          @Override
           public void checkExit(int status) {
             if (plateStatus == 0) {
               throw new SecurityException("exit is no permission.");
@@ -196,7 +199,14 @@ public class Main {
   public void start(Starter starter) {
     // スターターがスタートしているのかのフラグ
     starter.setStarted(true);
-    exec.execute(starter);
+    exec.execute(
+        () -> {
+          try {
+            starter.run();
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
+        });
   }
 
   /**
@@ -226,7 +236,7 @@ public class Main {
       portMap.get(port).getList().add(keyInfo);
       keyInfo.setPorter(portMap.get(port));
     } else {
-      Porter porter = new Porter(port, this);
+      Porter porter = new Porter(this);
       keyInfo.setPorter(porter);
       porter.getList().add(keyInfo);
       portMap.put(port, porter);
@@ -246,7 +256,7 @@ public class Main {
     if (portMap.containsKey(port)) {
       for (KeyInfo startingKey : portMap.get(port).getList()) {
         if (startingKey.getKey().equals(key)) {
-          Starter starter = startingKey.create(params, Starter.CMD);
+          Starter starter = startingKey.create(params, StarterKind.CALL);
           start(starter);
           return true;
         }
@@ -452,7 +462,7 @@ public class Main {
     this.user = config.user;
     this.cryptPass = config.hash;
     if (config.service != null) {
-      Porter servicePorter = new Porter("service", this);
+      Porter servicePorter = new Porter(this);
       portMap.put("service", servicePorter);
       if (config.service.classPath != null) {
         config.service.classPath.forEach(
@@ -482,7 +492,7 @@ public class Main {
               if (service.recovery) {
                 startKey.setRecovery(KeyInfo.AUTO);
               }
-              startKey.create(service.parameters, Starter.INIT);
+              startKey.create(service.parameters, StarterKind.SERVICE);
             });
       }
 
@@ -497,7 +507,7 @@ public class Main {
               });
     }
     if (config.batch != null) {
-      Porter batchPorter = new Porter("9900", this);
+      Porter batchPorter = new Porter(this);
       portMap.put("9900", batchPorter);
       if (config.batch.classPath != null) {
         config.batch.classPath.forEach(
@@ -525,14 +535,12 @@ public class Main {
                 startKey.setStatus(KeyInfo.STATUS_ENABLE);
               }
               if (batch.schedule != null) {
-                // TODO ここでTimer登録する
+                Schedule schedule = scheduleFactory.create(batch.schedule.cron);
+                schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
               }
             });
       }
-
       batchPorter.build();
-      new Thread(batchPorter).start();
-      batchPorter.setStatus(Porter.STATUS_OPEN);
     }
   }
 
@@ -572,44 +580,6 @@ public class Main {
       return false;
     }
     return true;
-  }
-
-  /**
-   * ポートをオープンする。
-   *
-   * @param port
-   * @return
-   */
-  public boolean openPort(String port, boolean openCheck) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      if (!openCheck || porter.getStatus() == Porter.STATUS_CLOSE) {
-        new Thread(porter).start();
-        portMap.get(port).setStatus(Porter.STATUS_OPEN);
-        // porterMap.put(port, porter);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * ポートを閉じる。
-   *
-   * @param port
-   * @return
-   */
-  public boolean closePort(String port, boolean closeCheck) {
-    if (portMap.containsKey(port)) {
-      Porter portInfo = portMap.get(port);
-      if (!closeCheck || portInfo.getStatus() == Porter.STATUS_OPEN) {
-        // porterMap.get(port).close();
-        portInfo.close();
-        portInfo.setStatus(Porter.STATUS_CLOSE);
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -657,52 +627,13 @@ public class Main {
   }
 
   /**
-   * 指定のポート情報を作成します。
-   *
-   * @param port
-   * @return
-   */
-  public boolean createPort(String port) {
-    if (!portMap.containsKey(port)) {
-      Porter porter = new Porter(port, this);
-      portMap.put(port, porter);
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * 指定のポート情報が存在するかをチェックします
    *
    * @param port
    * @return 指定のポート情報がない場合はfalse,ある場合はtrue
    */
   public boolean exists(String port) {
-    return portMap.containsKey(port);
-  }
-
-  /**
-   * 指定のポート情報が存在するかをチェックします
-   *
-   * @param port
-   * @return 指定のポート情報がない場合はfalse,ある場合はtrue
-   */
-  public boolean exists(String port, String key) {
-    return portMap.containsKey(port) && portMap.get(port).getList().contains(new KeyInfo(key));
-  }
-
-  /**
-   * 指定のポート情報を削除します。
-   *
-   * @param port
-   * @return 削除した場合はtrue, 削除しなかった場合はfalse
-   */
-  public boolean dropPort(String port) {
-    if (portMap.containsKey(port)) {
-      portMap.remove(port);
-      return true;
-    }
-    return false;
+    return List.of("service", "batch").contains(port);
   }
 
   /**

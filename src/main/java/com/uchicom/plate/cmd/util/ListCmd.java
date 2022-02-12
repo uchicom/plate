@@ -63,8 +63,6 @@ public class ListCmd extends AbstractCmd {
         Entry<String, Porter> ent = ite.next();
 
         strBuff.append(ent.getKey());
-        strBuff.append(" ");
-        strBuff.append((ent.getValue().getStatus() == Porter.STATUS_CLOSE ? "CLOSE" : "OPEN"));
         strBuff.append("\r\n");
         // ポートクラスパス情報
         for (CpInfo cpInfo : ent.getValue().getCpList()) {

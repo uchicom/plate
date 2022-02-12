@@ -15,10 +15,6 @@ import com.uchicom.plate.cmd.key.RemoveCpCmd;
 import com.uchicom.plate.cmd.key.RenameCmd;
 import com.uchicom.plate.cmd.key.StopCmd;
 import com.uchicom.plate.cmd.port.AddPortCpCmd;
-import com.uchicom.plate.cmd.port.CloseCmd;
-import com.uchicom.plate.cmd.port.CreateCmd;
-import com.uchicom.plate.cmd.port.DropCmd;
-import com.uchicom.plate.cmd.port.OpenCmd;
 import com.uchicom.plate.cmd.port.RemovePortCpCmd;
 import com.uchicom.plate.cmd.port.UseCmd;
 import com.uchicom.plate.cmd.util.BuildCmd;
@@ -102,11 +98,7 @@ public class Commander implements Runnable {
 
     cmdList = new ArrayList<AbstractCmd>();
     // ポート制御コマンド
-    cmdList.add(new CreateCmd(this));
-    cmdList.add(new OpenCmd(this));
     cmdList.add(new UseCmd(this));
-    cmdList.add(new CloseCmd(this));
-    cmdList.add(new DropCmd(this));
     cmdList.add(new AddPortCpCmd(this));
     cmdList.add(new RemovePortCpCmd(this));
     cmdList.add(new StopCmd(this));
