@@ -24,8 +24,12 @@ public class CpInfo {
    * @param classPath
    * @throws MalformedURLException
    */
-  public CpInfo(String classPath) throws MalformedURLException {
-    url = new URL(classPath);
+  public CpInfo(String classPath) {
+    try {
+      url = new URL(classPath);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
