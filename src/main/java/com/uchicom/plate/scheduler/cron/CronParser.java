@@ -8,8 +8,8 @@ public class CronParser implements Parser<Cron> {
   @Override
   public Cron parse(String description) {
     String[] splits = description.split(" +");
-    if (splits.length != 6) {
-      throw new CronParseException("column size is " + splits.length + "/6");
+    if (splits.length != 5) {
+      throw new CronParseException("column size is " + splits.length + "/5");
     }
     return new Cron(splits);
   }

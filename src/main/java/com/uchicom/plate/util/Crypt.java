@@ -78,15 +78,15 @@ public class Crypt {
       int value = ((bytes[i] & 0xFF) >> right);
       value = value | ((temp << (8 - right)) & 0xFF);
       temp = bytes[i];
-      bytes[i] = new Integer(value).byteValue();
+      bytes[i] = Integer.valueOf(value).byteValue();
     }
     int bit = 1 << ((prog & 0x7) + 1);
     for (int i = 0; i < bytes.length; i++) {
       int value = bytes[i] & bit;
       if (value == 0) {
-        bytes[i] = new Integer(bytes[i] | bit).byteValue();
+        bytes[i] = Integer.valueOf(bytes[i] | bit).byteValue();
       } else {
-        bytes[i] = new Integer(bytes[i] - bit).byteValue();
+        bytes[i] = Integer.valueOf(bytes[i] - bit).byteValue();
       }
     }
   }
@@ -108,9 +108,9 @@ public class Crypt {
     for (int i = 0; i < bytes.length; i++) {
       int value = bytes[i] & bit;
       if (value == 0) {
-        bytes[i] = new Integer(bytes[i] | bit).byteValue();
+        bytes[i] = Integer.valueOf(bytes[i] | bit).byteValue();
       } else {
-        bytes[i] = new Integer(bytes[i] - bit).byteValue();
+        bytes[i] = Integer.valueOf(bytes[i] - bit).byteValue();
       }
     }
 
@@ -127,7 +127,7 @@ public class Crypt {
       int value = (bytes[i] << left) & 0xFF;
       value = value | ((temp & 0xFF) >> (8 - left));
       temp = bytes[i];
-      bytes[i] = new Integer(value).byteValue();
+      bytes[i] = Integer.valueOf(value).byteValue();
     }
   }
 }

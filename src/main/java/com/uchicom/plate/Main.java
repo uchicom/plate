@@ -535,7 +535,18 @@ public class Main {
                 startKey.setStatus(KeyInfo.STATUS_ENABLE);
               }
               if (batch.schedule != null) {
-                Schedule schedule = scheduleFactory.create(batch.schedule.cron);
+                Schedule schedule = null;
+                if (batch.schedule.cron != null) {
+                  schedule = scheduleFactory.create(batch.schedule.cron);
+                } else {
+                  schedule =
+                      scheduleFactory.create(
+                          batch.schedule.minute,
+                          batch.schedule.hour,
+                          batch.schedule.day,
+                          batch.schedule.month,
+                          batch.schedule.dayOfWeek);
+                }
                 schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
               }
             });
