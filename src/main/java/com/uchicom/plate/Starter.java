@@ -1,6 +1,7 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.util.ThrowRunnable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -11,7 +12,7 @@ import java.util.Date;
  *
  * @author Uchiyama Shigeki
  */
-public class Starter implements Runnable {
+public class Starter implements ThrowRunnable<Throwable> {
 
   /** */
   private KeyInfo startingKey;
@@ -52,16 +53,13 @@ public class Starter implements Runnable {
   public static final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
 
   /** 起動元のソース */
-  private int source;
+  private StarterKind kind;
 
-  /** コマンドで実行 */
-  public static int CMD = 0x1;
-
-  /** ポートからキー呼び出し */
-  public static int PORT = 0x2;
-
-  /** 設定ファイルから呼び出し */
-  public static int INIT = 0x4;
+  public enum StarterKind {
+    CALL,
+    BATCH,
+    SERVICE
+  }
 
   /** */
   public boolean isAlive() {
@@ -77,10 +75,14 @@ public class Starter implements Runnable {
    * @param params
    * @param plate
    */
-  public Starter(KeyInfo startingKey, String[] params, int source) {
+  public Starter(KeyInfo startingKey, String[] params, StarterKind kind) {
     this.startingKey = startingKey;
-    this.params = params;
-    this.source = source;
+    if (params == null) {
+      this.params = new String[0];
+    } else {
+      this.params = params;
+    }
+    this.kind = kind;
   }
 
   /*
@@ -89,39 +91,30 @@ public class Starter implements Runnable {
    * @see java.lang.Runnable#run()
    */
   @Override
-  public void run() {
+  public void run() throws Throwable {
     if (start != 0 || !finish) {
       start = System.currentTimeMillis();
       try {
         invoke(params);
-      } catch (SecurityException e) {
-        e.printStackTrace();
-      } catch (NoSuchMethodException e) {
-        e.printStackTrace();
-      } catch (IllegalArgumentException e) {
-        e.printStackTrace();
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-      } catch (ClassNotFoundException e) {
-        e.printStackTrace();
-      } catch (Throwable e) {
-        e.printStackTrace();
+      } finally {
+        end = System.currentTimeMillis();
       }
-      end = System.currentTimeMillis();
     }
   }
 
   /** オブジェクトの文字列表現を取得する。 */
   public String toString() {
     StringBuffer strBuff = new StringBuffer(100);
-    if (source == CMD) {
-      strBuff.append("   CMD");
-    } else if (source == PORT) {
-      strBuff.append("   NET");
-    } else {
-      strBuff.append("   INI");
+    switch (kind) {
+      case CALL:
+        strBuff.append("   CALL");
+        break;
+      case BATCH:
+        strBuff.append("   BATCH");
+        break;
+      case SERVICE:
+        strBuff.append("   SERVICE");
+        break;
     }
     strBuff.append(" [");
     if (start == 0) {
@@ -281,17 +274,8 @@ public class Starter implements Runnable {
    *
    * @return source
    */
-  public int getSource() {
-    return source;
-  }
-
-  /**
-   * sourceを設定します。
-   *
-   * @param source
-   */
-  public void setSource(int source) {
-    this.source = source;
+  public StarterKind getKind() {
+    return kind;
   }
 
   /**

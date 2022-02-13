@@ -33,5 +33,6 @@ public class MainTest {
     assertThat(actual.batch.classPath).isNull();
     assertThat(actual.batch.batches).hasSize(1);
     assertThat(actual.batch.batches.get(0).classPath).isNull();
+    assertThat(actual.batch.batches.get(0).schedule.cron).isEqualTo("1 2 3 4 5");
   }
 }

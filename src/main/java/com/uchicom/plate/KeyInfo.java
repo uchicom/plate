@@ -1,6 +1,7 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.Starter.StarterKind;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -194,11 +195,11 @@ public class KeyInfo {
   }
 
   public Starter create(Starter starter) {
-    return create(starter.getParams(), starter.getSource());
+    return create(starter.getParams(), starter.getKind());
   }
 
-  public Starter create(String[] params, int source) {
-    Starter starter = new Starter(this, params, source);
+  public Starter create(String[] params, StarterKind kind) {
+    Starter starter = new Starter(this, params, kind);
     starterList.add(starter);
     return starter;
   }

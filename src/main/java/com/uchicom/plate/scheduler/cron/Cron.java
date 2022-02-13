@@ -115,16 +115,29 @@ public class Cron {
             .toArray();
   }
 
-  int nibun() {
-    return 0;
-  }
-
   public LocalDateTime nextDate() {
     // triggerIndex++をして順に移動する時間がオーバーしている場合は、triggerIndex++を進める
     // triggerIndexが最後まで行ったら、翌年で設定する
     // 365 * 24 * 60 * 60
     LocalDateTime now = LocalDateTime.now();
+
     // * = 0-59 map key(0-59)
-    return now;
+    scheduledTriggerIndex++;
+    if (scheduledTriggerIndex == triggers.length) {
+      scheduledTriggerIndex = 0;
+    }
+    int nextPeriod = triggers[scheduledTriggerIndex];
+    LocalDateTime schedule =
+        LocalDateTime.now()
+            .withMonth(nextPeriod / 100_00_00)
+            .withDayOfMonth(nextPeriod / 100_00 % 100)
+            .withHour(nextPeriod / 100 % 100)
+            .withMinute(nextPeriod % 100)
+            .withSecond(0)
+            .withNano(0);
+    if (now.isAfter(schedule)) {
+      return schedule.plusYears(1);
+    }
+    return schedule;
   }
 }

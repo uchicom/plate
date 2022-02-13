@@ -20,6 +20,8 @@ public class ScheduleTimerTask extends TimerTask {
       runnable.run();
     } catch (Throwable t) {
       t.printStackTrace();
+    } finally {
+      schedule.register();
     }
   }
 }
