@@ -2,7 +2,10 @@
 package com.uchicom.plate.scheduler.cron;
 
 import com.uchicom.util.Numbre;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -13,12 +16,13 @@ public class Cron {
   String day;
   String month;
   String dayOfWeek;
-  String command;
   int[] months;
   int[] days;
   int[] hours;
   int[] minutes;
+  int[] dayOfWeeks;
 
+  int targetYear;
   int[] triggers;
   int scheduledTriggerIndex = -1;
   // strategyを用意して検索する
@@ -31,8 +35,17 @@ public class Cron {
     day = description[2];
     month = description[3];
     dayOfWeek = description[4];
-    command = description[5];
-    initTriggers(minute, hour, day, month, dayOfWeek, command);
+    initTriggers(minute, hour, day, month, dayOfWeek);
+    setScheduledTriggerIndex();
+  }
+
+  public Cron(String minute, String hour, String day, String month, String dayOfWeek) {
+    this.minute = minute;
+    this.hour = hour;
+    this.day = day;
+    this.month = month;
+    this.dayOfWeek = dayOfWeek;
+    initTriggers(minute, hour, day, month, dayOfWeek);
     setScheduledTriggerIndex();
   }
 
@@ -66,11 +79,16 @@ public class Cron {
     int nowTrigger =
         createTrigger(now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute());
     scheduledTriggerIndex = getIndexByNibun(nowTrigger, 0, triggers.length);
+    if (scheduledTriggerIndex == triggers.length - 1) {
+      targetYear = now.getYear() - 1;
+    } else {
+      targetYear = now.getYear();
+    }
   }
 
   int getIndexByNibun(int now, int start, int length) {
     if (length == 1) {
-      if (triggers[start] <= now) {
+      if (triggers[start] < now) {
         return start;
       }
       if (start == 0) {
@@ -81,7 +99,11 @@ public class Cron {
     }
     int index = start + length / 2;
     if (triggers[index] == now) {
-      return index;
+      if (index == 0) {
+        return triggers.length - 1;
+      } else {
+        return index - 1;
+      }
     } else if (triggers[index] > now) {
       return getIndexByNibun(now, start, index - start);
     } else {
@@ -93,13 +115,13 @@ public class Cron {
     }
   }
 
-  void initTriggers(
-      String minute, String hour, String day, String month, String dayOfWeek, String command) {
+  void initTriggers(String minute, String hour, String day, String month, String dayOfWeek) {
     // 作成時にint[]で01010000 1/1 0:0などを保持
     months = getNumbers(month, 1, 12);
     days = getNumbers(day, 1, 31);
     hours = getNumbers(hour, 0, 23);
     minutes = getNumbers(minute, 0, 59);
+    dayOfWeeks = getNumbers(dayOfWeek, 1, 7);
     triggers =
         IntStream.of(months)
             .flatMap(
@@ -115,29 +137,39 @@ public class Cron {
             .toArray();
   }
 
-  public LocalDateTime nextDate() {
-    // triggerIndex++をして順に移動する時間がオーバーしている場合は、triggerIndex++を進める
-    // triggerIndexが最後まで行ったら、翌年で設定する
-    // 365 * 24 * 60 * 60
-    LocalDateTime now = LocalDateTime.now();
+  public LocalDateTime nextDateTime() {
 
-    // * = 0-59 map key(0-59)
     scheduledTriggerIndex++;
     if (scheduledTriggerIndex == triggers.length) {
       scheduledTriggerIndex = 0;
+      targetYear++;
     }
     int nextPeriod = triggers[scheduledTriggerIndex];
-    LocalDateTime schedule =
-        LocalDateTime.now()
-            .withMonth(nextPeriod / 100_00_00)
-            .withDayOfMonth(nextPeriod / 100_00 % 100)
-            .withHour(nextPeriod / 100 % 100)
-            .withMinute(nextPeriod % 100)
-            .withSecond(0)
-            .withNano(0);
-    if (now.isAfter(schedule)) {
-      return schedule.plusYears(1);
+    // 月末存在チェック
+    if (YearMonth.of(targetYear, nextPeriod / 100_00_00).lengthOfMonth()
+        < nextPeriod / 100_00 % 100) {
+      return nextDateTime();
+    }
+    var schedule =
+        LocalDateTime.of(
+            targetYear,
+            nextPeriod / 100_00_00,
+            nextPeriod / 100_00 % 100,
+            nextPeriod / 100 % 100,
+            nextPeriod % 100,
+            0,
+            0);
+    // 曜日チェック
+    if (!checkDayOfWeek(schedule.toLocalDate())) {
+      return nextDateTime();
     }
     return schedule;
+  }
+
+  boolean checkDayOfWeek(LocalDate nextDate) {
+    if (dayOfWeeks == null || dayOfWeeks.length == 0) {
+      return true;
+    }
+    return Arrays.binarySearch(dayOfWeeks, nextDate.getDayOfWeek().getValue()) >= 0;
   }
 }

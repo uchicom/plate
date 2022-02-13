@@ -64,7 +64,8 @@ public class Base64 {
         int b1 = getBase64Code(chs[chs.length - 4]);
         int b2 = getBase64Code(chs[chs.length - 3]);
         // 1 00111111 00110000
-        bytes[bytes.length - 1] = new Integer(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
+        bytes[bytes.length - 1] =
+            Integer.valueOf(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
       } else {
         // "="2byte
         bytes = new byte[maxLength / 4 * 3 + 2];
@@ -72,10 +73,12 @@ public class Base64 {
         int b2 = getBase64Code(chs[chs.length - 3]);
         int b3 = getBase64Code(chs[chs.length - 2]);
         // 1 00111111 00110000 00000000
-        bytes[bytes.length - 2] = new Integer(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
+        bytes[bytes.length - 2] =
+            Integer.valueOf(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
 
         // 2 00000000 00001111 00111100
-        bytes[bytes.length - 1] = new Integer(((b2 << 4) & 0xF0) | ((b3 >> 2) & 0x0F)).byteValue();
+        bytes[bytes.length - 1] =
+            Integer.valueOf(((b2 << 4) & 0xF0) | ((b3 >> 2) & 0x0F)).byteValue();
       }
     } else {
       bytes = new byte[maxLength / 4 * 3];
@@ -87,11 +90,11 @@ public class Base64 {
       int b3 = getBase64Code(chs[i + 2]);
       int b4 = getBase64Code(chs[i + 3]);
       // 1 00111111 00110000 00000000 00000000
-      bytes[index] = new Integer(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
+      bytes[index] = Integer.valueOf(((b1 << 2) & 0xFC) | ((b2 >> 4) & 0x03)).byteValue();
       // 2 00000000 00001111 00111100 00000000
-      bytes[index + 1] = new Integer(((b2 << 4) & 0xF0) | ((b3 >> 2) & 0x0F)).byteValue();
+      bytes[index + 1] = Integer.valueOf(((b2 << 4) & 0xF0) | ((b3 >> 2) & 0x0F)).byteValue();
       // 3 00000000 00000000 00000011 00111111
-      bytes[index + 2] = new Integer(((b3 << 6) & 0xC0) | (b4 & 0x3F)).byteValue();
+      bytes[index + 2] = Integer.valueOf(((b3 << 6) & 0xC0) | (b4 & 0x3F)).byteValue();
       index += 3;
     }
     return bytes;

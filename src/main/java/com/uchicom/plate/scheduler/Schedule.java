@@ -31,8 +31,6 @@ public class Schedule {
   }
 
   Date nextDate() {
-    Date date = Date.from(cron.nextDate().atZone(ZoneId.systemDefault()).toInstant());
-    System.out.println(date);
-    return date;
+    return Date.from(cron.nextDateTime().atZone(ZoneId.systemDefault()).toInstant());
   }
 }

@@ -20,7 +20,6 @@ public class SCallCmd extends AbstractCmd {
    */
   @Override
   public boolean execute(CmdSocketHandler handler, String[] params) {
-    // TODO Auto-generated method stub
     return false;
   }
 
