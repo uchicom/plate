@@ -77,7 +77,11 @@ public class Starter implements ThrowRunnable<Throwable> {
    */
   public Starter(KeyInfo startingKey, String[] params, StarterKind kind) {
     this.startingKey = startingKey;
-    this.params = params;
+    if (params == null) {
+      this.params = new String[0];
+    } else {
+      this.params = params;
+    }
     this.kind = kind;
   }
 
