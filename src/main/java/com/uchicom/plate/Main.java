@@ -508,7 +508,7 @@ public class Main {
     }
     if (config.batch != null) {
       Porter batchPorter = new Porter(this);
-      portMap.put("9900", batchPorter);
+      portMap.put("batch", batchPorter);
       if (config.batch.classPath != null) {
         config.batch.classPath.forEach(
             classPath -> {
