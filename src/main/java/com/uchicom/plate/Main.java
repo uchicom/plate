@@ -475,8 +475,10 @@ public class Main {
       if (config.service.services != null) {
         config.service.services.forEach(
             service -> {
-              KeyInfo startKey = new KeyInfo(service.key, service.className, service.startMethod);
+              KeyInfo startKey =
+                  new KeyInfo(service.key, service.className, service.method.startup);
               startKey.setPorter(servicePorter);
+              startKey.shutdownMethodName = service.method.shutdown;
               servicePorter.getList().add(startKey);
               if (service.classPath != null) {
                 service.classPath.forEach(
@@ -520,7 +522,8 @@ public class Main {
       if (config.batch.batches != null) {
         config.batch.batches.forEach(
             batch -> {
-              KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.startMethod);
+              KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
+              startKey.shutdownMethodName = batch.method.shutdown;
               startKey.setPorter(batchPorter);
               batchPorter.getList().add(startKey);
               if (batch.classPath != null) {

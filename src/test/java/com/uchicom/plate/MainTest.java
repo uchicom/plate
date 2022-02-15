@@ -20,8 +20,8 @@ public class MainTest {
     assertThat(actual.service.services.get(0).classPath).isNull();
     assertThat(actual.service.services.get(0).key).isEqualTo("server1");
     assertThat(actual.service.services.get(0).className).isEqualTo("com.uchicom.hoge.Main");
-    assertThat(actual.service.services.get(0).startMethod).isEqualTo("main");
-    assertThat(actual.service.services.get(0).shutdownMethod).isEqualTo("shutdown");
+    assertThat(actual.service.services.get(0).method.startup).isEqualTo("main");
+    assertThat(actual.service.services.get(0).method.shutdown).isEqualTo("shutdown");
     assertThat(actual.service.services.get(0).parameters).hasSize(4);
     assertThat(actual.service.services.get(0).parameters[0]).isEqualTo("a");
     assertThat(actual.service.services.get(0).parameters[1]).isEqualTo("b");

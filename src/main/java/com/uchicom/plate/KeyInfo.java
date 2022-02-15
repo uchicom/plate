@@ -24,6 +24,8 @@ public class KeyInfo {
   /** スタティックメソッド名 */
   private String methodName;
 
+  public String shutdownMethodName;
+
   /**
    * methodNameを取得します。
    *

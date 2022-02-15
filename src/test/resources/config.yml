@@ -4,16 +4,21 @@ service:
   services:
     - key: server1 # require
       className: com.uchicom.hoge.Main # require
-      startMethod: main # default main
-      shutdownMethod: shutdown
+      method: 
+        startup: main # default main
+        shutdown: shutdown
       parameters: [a, b, c, d] 
       disabled: false # default false
       recovery: true # default true
+      order: 
+        startup:  1  #default 0
+        shutdown:  1  #default 0
 batch:
   batches:
     - key: batch1 # require
       className: com.uchicom.hoge.Main # require
-      startMethod: main # default main
+      method:
+        startup: main # default main
       parameters: [a, b, c, d]
       disabled: false  # default false
       schedule: 
