@@ -7,8 +7,8 @@ public class StarterDto {
   public String key;
   public List<String> classPath;
   public String className;
-  public String startMethod;
-  public String shutdownMethod;
+  public MethodDto method = new MethodDto();
   public String[] parameters;
   public boolean disabled;
+  public OrderDto order = new OrderDto();
 }

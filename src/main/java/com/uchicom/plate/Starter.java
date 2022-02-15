@@ -154,24 +154,26 @@ public class Starter implements ThrowRunnable<Throwable> {
       end = System.currentTimeMillis();
       finish = true;
     } else if (!finish) {
-      try {
-        Method method = classObject.getMethod("shutdown");
-        method.invoke(classObject);
-      } catch (SecurityException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (NoSuchMethodException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (IllegalArgumentException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
+      if (startingKey.shutdownMethodName != null) {
+        try {
+          Method method = classObject.getMethod(startingKey.shutdownMethodName);
+          method.invoke(classObject);
+        } catch (SecurityException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (NoSuchMethodException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (IllegalArgumentException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        }
       }
     } else {
       end = System.currentTimeMillis();
@@ -187,24 +189,27 @@ public class Starter implements ThrowRunnable<Throwable> {
       end = System.currentTimeMillis();
       finish = true;
     } else if (!finish) {
-      try {
-        Method method = classObject.getMethod("shutdown", new Class[] {String[].class});
-        method.invoke(classObject, new Object[] {params});
-      } catch (SecurityException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (NoSuchMethodException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (IllegalArgumentException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-        System.err.print(e.getMessage());
+      if (startingKey.shutdownMethodName != null) {
+        try {
+          Method method =
+              classObject.getMethod(startingKey.shutdownMethodName, new Class[] {String[].class});
+          method.invoke(classObject, new Object[] {params});
+        } catch (SecurityException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (NoSuchMethodException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (IllegalArgumentException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+          System.err.print(e.getMessage());
+        }
       }
     } else {
       end = System.currentTimeMillis();
