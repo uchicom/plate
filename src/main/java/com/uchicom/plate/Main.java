@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -473,29 +472,31 @@ public class Main {
             });
       }
       if (config.service.services != null) {
-        config.service.services.forEach(
-            service -> {
-              KeyInfo startKey =
-                  new KeyInfo(service.key, service.className, service.method.startup);
-              startKey.setPorter(servicePorter);
-              startKey.shutdownMethodName = service.method.shutdown;
-              servicePorter.getList().add(startKey);
-              if (service.classPath != null) {
-                service.classPath.forEach(
-                    classPath -> {
-                      CpInfo cpInfo = new CpInfo(classPath);
-                      startKey.addCp(cpInfo);
-                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-                    });
-              }
-              if (!service.disabled) {
-                startKey.setStatus(KeyInfo.STATUS_ENABLE);
-              }
-              if (service.recovery) {
-                startKey.setRecovery(KeyInfo.AUTO);
-              }
-              startKey.create(service.parameters, StarterKind.SERVICE);
-            });
+        config.service.services.stream()
+            .sorted((a, b) -> a.order.startup - b.order.startup)
+            .forEach(
+                service -> {
+                  KeyInfo startKey =
+                      new KeyInfo(service.key, service.className, service.method.startup);
+                  startKey.setPorter(servicePorter);
+                  startKey.shutdownMethodName = service.method.shutdown;
+                  servicePorter.getList().add(startKey);
+                  if (service.classPath != null) {
+                    service.classPath.forEach(
+                        classPath -> {
+                          CpInfo cpInfo = new CpInfo(classPath);
+                          startKey.addCp(cpInfo);
+                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                        });
+                  }
+                  if (!service.disabled) {
+                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                  }
+                  if (service.recovery) {
+                    startKey.setRecovery(KeyInfo.AUTO);
+                  }
+                  startKey.create(service.parameters, StarterKind.SERVICE);
+                });
       }
 
       servicePorter.build();
@@ -520,39 +521,41 @@ public class Main {
             });
       }
       if (config.batch.batches != null) {
-        config.batch.batches.forEach(
-            batch -> {
-              KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
-              startKey.shutdownMethodName = batch.method.shutdown;
-              startKey.setPorter(batchPorter);
-              batchPorter.getList().add(startKey);
-              if (batch.classPath != null) {
-                batch.classPath.forEach(
-                    classPath -> {
-                      CpInfo cpInfo = new CpInfo(classPath);
-                      startKey.addCp(cpInfo);
-                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-                    });
-              }
-              if (!batch.disabled) {
-                startKey.setStatus(KeyInfo.STATUS_ENABLE);
-              }
-              if (batch.schedule != null) {
-                Schedule schedule = null;
-                if (batch.schedule.cron != null) {
-                  schedule = scheduleFactory.create(batch.schedule.cron);
-                } else {
-                  schedule =
-                      scheduleFactory.create(
-                          batch.schedule.minute,
-                          batch.schedule.hour,
-                          batch.schedule.day,
-                          batch.schedule.month,
-                          batch.schedule.dayOfWeek);
-                }
-                schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
-              }
-            });
+        config.batch.batches.stream()
+            .sorted((a, b) -> a.order.startup - b.order.startup)
+            .forEach(
+                batch -> {
+                  KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
+                  startKey.shutdownMethodName = batch.method.shutdown;
+                  startKey.setPorter(batchPorter);
+                  batchPorter.getList().add(startKey);
+                  if (batch.classPath != null) {
+                    batch.classPath.forEach(
+                        classPath -> {
+                          CpInfo cpInfo = new CpInfo(classPath);
+                          startKey.addCp(cpInfo);
+                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                        });
+                  }
+                  if (!batch.disabled) {
+                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                  }
+                  if (batch.schedule != null) {
+                    Schedule schedule = null;
+                    if (batch.schedule.cron != null) {
+                      schedule = scheduleFactory.create(batch.schedule.cron);
+                    } else {
+                      schedule =
+                          scheduleFactory.create(
+                              batch.schedule.minute,
+                              batch.schedule.hour,
+                              batch.schedule.day,
+                              batch.schedule.month,
+                              batch.schedule.dayOfWeek);
+                    }
+                    schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
+                  }
+                });
       }
       batchPorter.build();
     }
@@ -622,20 +625,20 @@ public class Main {
 
   /** 全ての実行を自動復帰せずに終了させる. できるかぎりshutdownする. */
   public void shutdown() {
-    Set<Entry<String, Porter>> set = portMap.entrySet();
-    Iterator<Entry<String, Porter>> iterator = set.iterator();
-    while (iterator.hasNext()) {
-      Entry<String, Porter> entry = iterator.next();
-      for (KeyInfo key : entry.getValue().getList()) {
-        for (Starter starter : key.getStarterList()) {
-          if (!starter.isFinish()) {
-            try {
-              starter.shutdown();
-            } catch (Exception e) {
-              e.printStackTrace();
-            }
-          }
-        }
+    if (config.service != null) {
+      if (config.service.services != null) {
+        config.service.services.stream()
+            .sorted((a, b) -> a.order.shutdown - b.order.shutdown)
+            .forEach(
+                service -> {
+                  try {
+                    portMap.get("service").getList().stream()
+                        .filter(keyInfo -> keyInfo.getKey().equals(service.key))
+                        .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                });
       }
     }
   }
