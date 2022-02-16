@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -626,20 +625,20 @@ public class Main {
 
   /** 全ての実行を自動復帰せずに終了させる. できるかぎりshutdownする. */
   public void shutdown() {
-    Set<Entry<String, Porter>> set = portMap.entrySet();
-    Iterator<Entry<String, Porter>> iterator = set.iterator();
-    while (iterator.hasNext()) {
-      Entry<String, Porter> entry = iterator.next();
-      for (KeyInfo key : entry.getValue().getList()) {
-        for (Starter starter : key.getStarterList()) {
-          if (!starter.isFinish()) {
-            try {
-              starter.shutdown();
-            } catch (Exception e) {
-              e.printStackTrace();
-            }
-          }
-        }
+    if (config.service != null) {
+      if (config.service.services != null) {
+        config.service.services.stream()
+            .sorted((a, b) -> a.order.shutdown - b.order.shutdown)
+            .forEach(
+                service -> {
+                  try {
+                    portMap.get("service").getList().stream()
+                        .filter(keyInfo -> keyInfo.getKey().equals(service.key))
+                        .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                });
       }
     }
   }
