@@ -473,29 +473,31 @@ public class Main {
             });
       }
       if (config.service.services != null) {
-        config.service.services.forEach(
-            service -> {
-              KeyInfo startKey =
-                  new KeyInfo(service.key, service.className, service.method.startup);
-              startKey.setPorter(servicePorter);
-              startKey.shutdownMethodName = service.method.shutdown;
-              servicePorter.getList().add(startKey);
-              if (service.classPath != null) {
-                service.classPath.forEach(
-                    classPath -> {
-                      CpInfo cpInfo = new CpInfo(classPath);
-                      startKey.addCp(cpInfo);
-                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-                    });
-              }
-              if (!service.disabled) {
-                startKey.setStatus(KeyInfo.STATUS_ENABLE);
-              }
-              if (service.recovery) {
-                startKey.setRecovery(KeyInfo.AUTO);
-              }
-              startKey.create(service.parameters, StarterKind.SERVICE);
-            });
+        config.service.services.stream()
+            .sorted((a, b) -> a.order.startup - b.order.startup)
+            .forEach(
+                service -> {
+                  KeyInfo startKey =
+                      new KeyInfo(service.key, service.className, service.method.startup);
+                  startKey.setPorter(servicePorter);
+                  startKey.shutdownMethodName = service.method.shutdown;
+                  servicePorter.getList().add(startKey);
+                  if (service.classPath != null) {
+                    service.classPath.forEach(
+                        classPath -> {
+                          CpInfo cpInfo = new CpInfo(classPath);
+                          startKey.addCp(cpInfo);
+                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                        });
+                  }
+                  if (!service.disabled) {
+                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                  }
+                  if (service.recovery) {
+                    startKey.setRecovery(KeyInfo.AUTO);
+                  }
+                  startKey.create(service.parameters, StarterKind.SERVICE);
+                });
       }
 
       servicePorter.build();
@@ -520,39 +522,41 @@ public class Main {
             });
       }
       if (config.batch.batches != null) {
-        config.batch.batches.forEach(
-            batch -> {
-              KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
-              startKey.shutdownMethodName = batch.method.shutdown;
-              startKey.setPorter(batchPorter);
-              batchPorter.getList().add(startKey);
-              if (batch.classPath != null) {
-                batch.classPath.forEach(
-                    classPath -> {
-                      CpInfo cpInfo = new CpInfo(classPath);
-                      startKey.addCp(cpInfo);
-                      cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
-                    });
-              }
-              if (!batch.disabled) {
-                startKey.setStatus(KeyInfo.STATUS_ENABLE);
-              }
-              if (batch.schedule != null) {
-                Schedule schedule = null;
-                if (batch.schedule.cron != null) {
-                  schedule = scheduleFactory.create(batch.schedule.cron);
-                } else {
-                  schedule =
-                      scheduleFactory.create(
-                          batch.schedule.minute,
-                          batch.schedule.hour,
-                          batch.schedule.day,
-                          batch.schedule.month,
-                          batch.schedule.dayOfWeek);
-                }
-                schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
-              }
-            });
+        config.batch.batches.stream()
+            .sorted((a, b) -> a.order.startup - b.order.startup)
+            .forEach(
+                batch -> {
+                  KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
+                  startKey.shutdownMethodName = batch.method.shutdown;
+                  startKey.setPorter(batchPorter);
+                  batchPorter.getList().add(startKey);
+                  if (batch.classPath != null) {
+                    batch.classPath.forEach(
+                        classPath -> {
+                          CpInfo cpInfo = new CpInfo(classPath);
+                          startKey.addCp(cpInfo);
+                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                        });
+                  }
+                  if (!batch.disabled) {
+                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                  }
+                  if (batch.schedule != null) {
+                    Schedule schedule = null;
+                    if (batch.schedule.cron != null) {
+                      schedule = scheduleFactory.create(batch.schedule.cron);
+                    } else {
+                      schedule =
+                          scheduleFactory.create(
+                              batch.schedule.minute,
+                              batch.schedule.hour,
+                              batch.schedule.day,
+                              batch.schedule.month,
+                              batch.schedule.dayOfWeek);
+                    }
+                    schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
+                  }
+                });
       }
       batchPorter.build();
     }
