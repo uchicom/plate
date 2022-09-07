@@ -1,5 +1,8 @@
 image:
   file: .gitpod.Dockerfile
+tasks:
+  - name: download library
+    init: mvn spotless:apply verify
 vscode:
   extensions:
     - vscjava.vscode-java-pack
@@ -9,4 +12,8 @@ vscode:
     - vscjava.vscode-java-test
     - vscjava.vscode-java-dependency
     - donjayamanne.githistory
-    - github.vscode-pull-request-github
+    - ritwickdey.liveserver
+github:
+  prebuilds:
+    pullRequests: false
+    addComment: false

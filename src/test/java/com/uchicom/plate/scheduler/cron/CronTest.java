@@ -126,6 +126,7 @@ public class CronTest {
     assertEquals(5010000, cron.triggers[3]);
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   @Test
   public void nextDateTime() {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
@@ -143,6 +144,7 @@ public class CronTest {
     assertThat(cron.nextDateTime()).isEqualTo(yearAfterNext);
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   @Test
   public void nextDateTimeDayOfWeek() {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
@@ -157,6 +159,7 @@ public class CronTest {
     assertThat(cron.nextDateTime()).isEqualTo(LocalDateTime.of(2023, 2, 7, 0, 0, 0));
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   @Test
   public void nextDateTimeLeapYear() {
     LocalDateTime now = LocalDateTime.of(2024, 02, 28, 0, 0, 0);
@@ -174,6 +177,7 @@ public class CronTest {
     assertThat(cron.nextDateTime()).isEqualTo(nextYear);
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   @Test
   public void checkDayOfWeek() {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
