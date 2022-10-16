@@ -2,6 +2,7 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
+import com.uchicom.plate.scheduler.Schedule;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -25,6 +26,8 @@ public class KeyInfo {
   private String methodName;
 
   public String shutdownMethodName;
+
+  private Schedule schedule;
 
   /**
    * methodNameを取得します。
@@ -273,6 +276,10 @@ public class KeyInfo {
     this.recovery = recovery;
   }
 
+  public void setSchedule(Schedule schedule) {
+    this.schedule = schedule;
+  }
+
   public String toString() {
     StringBuffer strBuff = new StringBuffer();
     strBuff.append(' ');
@@ -294,6 +301,10 @@ public class KeyInfo {
     // スターター情報
     for (Starter starter : starterList) {
       strBuff.append(starter);
+    }
+    // スケジュール
+    if (schedule != null) {
+      strBuff.append(schedule);
     }
     strBuff.append("\r\n");
     return strBuff.toString();
