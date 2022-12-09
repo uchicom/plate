@@ -15,7 +15,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,8 +66,6 @@ public class Main {
       plate.load(parameter.getFile("file"));
     }
 
-    // セキュリティーマネージャーの設定
-    plate.setSecurity();
     Runtime.getRuntime().addShutdownHook(new ShutdownHook(plate));
     plate.execute();
   }
@@ -81,9 +78,6 @@ public class Main {
 
   /** ポート */
   private int port;
-
-  /** plateの状態 */
-  private int plateStatus;
 
   /** キー情報保持マップ */
   private Map<String, Porter> portMap = new HashMap<String, Porter>();
@@ -162,26 +156,6 @@ public class Main {
     this.address = address;
     this.port = port;
     exec = Executors.newFixedThreadPool(pool);
-  }
-
-  /** セキュリティマネージャーでexitをSecurityExceptionにする。 */
-  protected void setSecurity() {
-    System.setSecurityManager(
-        new SecurityManager() {
-          @Override
-          public void checkPermission(Permission perm) {
-            if ("setSecurityManager".equals(perm.getName())) {
-              throw new SecurityException("setSecurityManager is no permission.");
-            }
-          }
-
-          @Override
-          public void checkExit(int status) {
-            if (plateStatus == 0) {
-              throw new SecurityException("exit is no permission.");
-            }
-          }
-        });
   }
 
   /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
@@ -554,6 +528,7 @@ public class Main {
                               batch.schedule.dayOfWeek);
                     }
                     schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
+                    startKey.setSchedule(schedule);
                   }
                 });
       }
@@ -619,7 +594,6 @@ public class Main {
 
   /** サーバーを終了する。 */
   public void exit() {
-    this.plateStatus = 1;
     System.exit(0);
   }
 

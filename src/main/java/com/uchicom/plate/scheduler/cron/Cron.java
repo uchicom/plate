@@ -63,7 +63,7 @@ public class Cron {
   }
 
   int[] getNumbers(String condition, int start, int end) {
-    if (condition == "*") {
+    if ("*".equals(condition)) {
       return createNumbers(start, end);
     } else {
       return parse(condition);
@@ -171,5 +171,10 @@ public class Cron {
       return true;
     }
     return Arrays.binarySearch(dayOfWeeks, nextDate.getDayOfWeek().getValue()) >= 0;
+  }
+
+  @Override
+  public String toString() {
+    return minute + " " + hour + " " + day + " " + month + " " + dayOfWeek;
   }
 }
