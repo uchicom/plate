@@ -28,3 +28,22 @@ batch:
         day:
         month:
         dayOfWeek: #未対応 スケジュールする際に
+github:
+  hoge:
+    token: <github_token>
+    repos: uchicom/plate
+    dirPath: release
+    downloadFiles:
+      - kind: ASSETS
+        filter: ".*.jar"
+      - kind: ZIPBALL
+      - kind: TARBALL
+  hoge2:
+    repos: uchicom/plate
+    dirPath: release
+    downloadFiles:
+      - kind: ASSETS
+        filter: ".*.jar"
+      - kind: ZIPBALL
+      - kind: TARBALL
+

@@ -6,6 +6,7 @@ import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.scheduler.cron.CronParser;
+import com.uchicom.plate.service.GithubService;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
@@ -41,6 +42,8 @@ public class Main {
   public static final String DEFAULT_ADDRESS = "localhost";
 
   public Timer timer = new Timer();
+
+  private final GithubService githubService = new GithubService();
 
   /**
    * コマンド引数を使用してサーバーを起動する。 ポート番号を指定してコマンドを受け付けるポート番号を指定する。
@@ -812,5 +815,12 @@ public class Main {
 
   public File getLoadFile() {
     return loadFile;
+  }
+
+  public boolean downloads(String key, String tag) {
+    if (!config.github.containsKey(key)) {
+      return false;
+    }
+    return githubService.download(config.github.get(key), tag);
   }
 }
