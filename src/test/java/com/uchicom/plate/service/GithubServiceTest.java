@@ -17,7 +17,7 @@ public class GithubServiceTest {
     dto.downloadFiles = new ArrayList<>();
     var downloadFileDto = new DownloadFileDto();
     downloadFileDto.kind = DownloadFileKind.ASSETS;
-    downloadFileDto.filter = ".*.jar";
+    downloadFileDto.filter = "[^\"]+.jar";
     dto.downloadFiles.add(downloadFileDto);
     service.download(dto, "0.1.14");
   }
@@ -31,7 +31,6 @@ public class GithubServiceTest {
     dto.downloadFiles = new ArrayList<>();
     var downloadFileDto = new DownloadFileDto();
     downloadFileDto.kind = DownloadFileKind.ZIPBALL;
-    downloadFileDto.filter = ".*.jar";
     dto.downloadFiles.add(downloadFileDto);
     service.download(dto, "0.1.14");
   }
@@ -45,7 +44,6 @@ public class GithubServiceTest {
     dto.downloadFiles = new ArrayList<>();
     var downloadFileDto = new DownloadFileDto();
     downloadFileDto.kind = DownloadFileKind.TARBALL;
-    downloadFileDto.filter = ".*.jar";
     dto.downloadFiles.add(downloadFileDto);
     service.download(dto, "0.1.14");
   }
