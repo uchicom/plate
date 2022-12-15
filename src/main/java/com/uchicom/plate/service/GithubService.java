@@ -3,6 +3,7 @@ package com.uchicom.plate.service;
 
 import com.uchicom.plate.dto.GithubDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -10,7 +11,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -18,16 +18,23 @@ import java.util.regex.Pattern;
 public class GithubService {
   public boolean download(GithubDto dto, String tag) {
     try {
+      var dirPath = dto.dirPath + "/" + tag;
+      var dir = new File(dirPath);
+      if (!dir.exists()) {
+        if (!dir.mkdirs()) {
+          System.out.println("ディレクトリ作成に失敗しました." + dirPath);
+          return false;
+        }
+      }
       var list = new ArrayList<Path>();
       for (var downloadFile : dto.downloadFiles) {
         switch (downloadFile.kind) {
           case ASSETS:
-            list.addAll(
-                downloadAssets(dto.token, dto.dirPath, dto.repos, downloadFile.filter, tag));
+            list.addAll(downloadAssets(dto.token, dirPath, dto.repos, downloadFile.filter, tag));
             break;
           case TARBALL:
           case ZIPBALL:
-            list.add(downloadFile(dto.token, dto.dirPath, dto.repos, downloadFile.kind, tag));
+            list.add(downloadFile(dto.token, dirPath, dto.repos, downloadFile.kind, tag));
           default:
             // fall through
         }
@@ -48,7 +55,7 @@ public class GithubService {
       throws IOException, InterruptedException {
     String body = dowload(token, repos, DownloadFileKind.TAGS, tag, BodyHandlers.ofString());
     var matcher =
-        Pattern.compile("\"id\":([0-9]+),\"node_id\":\"[^\"]+\",\"name\":\"" + filter + "\",")
+        Pattern.compile("\"id\":([0-9]+),\"node_id\":\"[^\"]+\",\"name\":\"(" + filter + ")\",")
             .matcher(body);
     var list = new ArrayList<Path>();
     while (matcher.find()) {
@@ -58,8 +65,7 @@ public class GithubService {
               repos,
               DownloadFileKind.ASSETS,
               matcher.group(1),
-              BodyHandlers.ofFileDownload(
-                  Path.of(dirPath), StandardOpenOption.CREATE, StandardOpenOption.WRITE)));
+              BodyHandlers.ofFile(Path.of(dirPath + "/" + matcher.group(2)))));
     }
     return list;
   }
@@ -83,8 +89,7 @@ public class GithubService {
         repos,
         downloadKind,
         tag,
-        BodyHandlers.ofFileDownload(
-            Path.of(dirPath), StandardOpenOption.CREATE, StandardOpenOption.WRITE));
+        BodyHandlers.ofFile(Path.of(dirPath + "/" + downloadKind.getFileName(tag))));
   }
 
   <T> T dowload(
@@ -103,9 +108,12 @@ public class GithubService {
 
   HttpRequest createRequest(
       String token, String repos, DownloadFileKind downloadKind, String param) {
-    var builder = HttpRequest.newBuilder().uri(createUri(token, repos, downloadKind, param)).GET();
+    var builder = HttpRequest.newBuilder().uri(createUri(repos, downloadKind, param)).GET();
     if (downloadKind == DownloadFileKind.ASSETS) {
       builder.header("Accept", "application/octet-stream");
+    }
+    if (token != null) {
+      builder.header("Authorization", "Bearer " + token);
     }
     return builder.build();
   }
@@ -114,15 +122,8 @@ public class GithubService {
     return "/repos/" + repos + "/" + downloadKind.getPath(param);
   }
 
-  String createHost(String token) {
-    if (token == null) {
-      return "https://api.github.com";
-    }
-    return "https://" + token + "@api.github.com";
-  }
-
-  URI createUri(String token, String repos, DownloadFileKind downloadKind, String param) {
-    var uri = createHost(token) + createPath(repos, downloadKind, param);
+  URI createUri(String repos, DownloadFileKind downloadKind, String param) {
+    var uri = "https://api.github.com" + createPath(repos, downloadKind, param);
     return URI.create(uri);
   }
 }
