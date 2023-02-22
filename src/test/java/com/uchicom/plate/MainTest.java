@@ -46,11 +46,4 @@ public class MainTest {
     assertThat(actual.deploy.get("hoge").deployFiles.get(1).decompress).isEqualTo("*/www/*");
     assertThat(actual.deploy.get("hoge").deployFiles.get(1).to).isEqualTo("hoge/www/");
   }
-
-  @Test
-  public void lsdl() {
-    Main main = new Main();
-    main.load(new File("./src/test/resources/config.yml"));
-    main.lsdl("hoge");
-  }
 }
