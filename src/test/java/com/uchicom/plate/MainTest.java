@@ -34,5 +34,23 @@ public class MainTest {
     assertThat(actual.batch.batches).hasSize(1);
     assertThat(actual.batch.batches.get(0).classPath).isNull();
     assertThat(actual.batch.batches.get(0).schedule.cron).isEqualTo("1 2 3 4 5");
+    assertThat(actual.github).isNotNull();
+    assertThat(actual.deploy).isNotNull();
+    assertThat(actual.deploy).hasSize(1);
+    assertThat(actual.deploy.get("hoge").dirPath).isEqualTo("release");
+    assertThat(actual.deploy.get("hoge").deployFiles).hasSize(2);
+    assertThat(actual.deploy.get("hoge").deployFiles.get(0).from).isEqualTo("/*.jar");
+    assertThat(actual.deploy.get("hoge").deployFiles.get(0).decompress).isNull();
+    assertThat(actual.deploy.get("hoge").deployFiles.get(0).to).isEqualTo("hoge/lib/");
+    assertThat(actual.deploy.get("hoge").deployFiles.get(1).from).isEqualTo("/*.tar.gz");
+    assertThat(actual.deploy.get("hoge").deployFiles.get(1).decompress).isEqualTo("*/www/*");
+    assertThat(actual.deploy.get("hoge").deployFiles.get(1).to).isEqualTo("hoge/www/");
+  }
+
+  @Test
+  public void lsdl() {
+    Main main = new Main();
+    main.load(new File("./src/test/resources/config.yml"));
+    main.lsdl("hoge");
   }
 }
