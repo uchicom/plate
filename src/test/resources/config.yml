@@ -46,4 +46,12 @@ github:
         filter: ".*.jar"
       - kind: ZIPBALL
       - kind: TARBALL
-
+deploy:
+  hoge:
+    dirPath: release
+    deployFiles:
+      - from: /*.jar # 単純移動
+        to: hoge/lib/
+      - from: /*.tar.gz
+        decompress: "*/www/*" #アーカイブファイルを展開してフィルタリングする
+        to: hoge/www/

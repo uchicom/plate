@@ -1,22 +1,22 @@
-// (C) 2012 uchicom
-package com.uchicom.plate.cmd.key;
+// (C) 2023 uchicom
+package com.uchicom.plate.cmd.github;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
- * キーを呼び出すコマンド
+ * ダウンロードファイルを確認するコマンド.
  *
  * @author Uchiyama Shigeki
  */
-public class DownloadCmd extends AbstractCmd {
+public class LsdlCmd extends AbstractCmd {
 
   /** コマンド文字列 */
-  public static final String CMD = "download";
+  public static final String CMD = "lsdl";
 
   /** @param plate */
-  public DownloadCmd(Commander broker) {
+  public LsdlCmd(Commander broker) {
     super(CMD, broker);
   }
 
@@ -28,7 +28,7 @@ public class DownloadCmd extends AbstractCmd {
    */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
-    return params.length == 2;
+    return params.length == 1;
   }
 
   /*
@@ -39,7 +39,7 @@ public class DownloadCmd extends AbstractCmd {
    */
   @Override
   public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().downloads(params[0], params[1]);
+    return broker.getMain().lsdl(params[0]);
   }
 
   /*
@@ -51,8 +51,8 @@ public class DownloadCmd extends AbstractCmd {
   public String getHelp() {
     return " "
         + CMD
-        + ": You can download assets, tarball or zipball of github.(The use command is required)\r\n"
-        + "  format)download key tag\r\n"
-        + "  ex)download hoge v20221214\r\n";
+        + ": You can see download list.(The use command is required)\r\n"
+        + "  format)lsdl key\r\n"
+        + "  ex)ldsl hoge\r\n";
   }
 }

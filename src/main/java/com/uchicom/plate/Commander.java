@@ -2,12 +2,14 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.cmd.deploy.DeployCmd;
+import com.uchicom.plate.cmd.github.DownloadCmd;
+import com.uchicom.plate.cmd.github.LsdlCmd;
 import com.uchicom.plate.cmd.key.AddCmd;
 import com.uchicom.plate.cmd.key.AddCpCmd;
 import com.uchicom.plate.cmd.key.AutoCmd;
 import com.uchicom.plate.cmd.key.CallCmd;
 import com.uchicom.plate.cmd.key.DisableCmd;
-import com.uchicom.plate.cmd.key.DownloadCmd;
 import com.uchicom.plate.cmd.key.EditCmd;
 import com.uchicom.plate.cmd.key.EnableCmd;
 import com.uchicom.plate.cmd.key.ManualCmd;
@@ -130,6 +132,8 @@ public class Commander implements Runnable {
     cmdList.add(new PurgeCmd(this));
     // その他
     cmdList.add(new DownloadCmd(this));
+    cmdList.add(new LsdlCmd(this));
+    cmdList.add(new DeployCmd(this));
     // コマンドクラスの準備
     for (AbstractCmd cmd : cmdList) {
       cmdMap.put(cmd.getName(), cmd);
