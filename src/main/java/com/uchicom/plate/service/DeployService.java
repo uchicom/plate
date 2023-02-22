@@ -52,7 +52,7 @@ public class DeployService {
     // ファイル存在チェック
     for (var deployFile : dto.deployFiles) {
       var file = createFile(dir, deployFile.from);
-      if (file.exists()) {
+      if (!file.exists()) {
         System.err.println("ファイルが存在しません." + dir.getPath() + "/" + deployFile.from);
         return false;
       }
