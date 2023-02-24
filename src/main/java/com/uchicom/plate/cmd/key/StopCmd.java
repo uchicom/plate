@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.key;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /** @author Uchiyama Shigeki */
@@ -33,10 +34,11 @@ public class StopCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     String[] newParams = new String[params.length - 1];
     System.arraycopy(params, 1, newParams, 0, newParams.length);
-    return broker.getMain().shutdownKey(handler.getCurrentPort(), params[0], newParams);
+    broker.getMain().shutdownKey(handler.getCurrentPort(), params[0], newParams);
+    return null;
   }
 
   /*

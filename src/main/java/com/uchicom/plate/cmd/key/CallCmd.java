@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.key;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
@@ -38,11 +39,12 @@ public class CallCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     int length = params.length - 1;
     String[] newParams = new String[length];
     System.arraycopy(params, 1, newParams, 0, length);
-    return broker.getMain().callKey(handler.getCurrentPort(), params[0], newParams);
+    broker.getMain().callKey(handler.getCurrentPort(), params[0], newParams);
+    return null;
   }
 
   /*

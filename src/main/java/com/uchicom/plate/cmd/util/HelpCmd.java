@@ -15,8 +15,6 @@ public class HelpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "help";
 
-  private StringBuffer strBuff = new StringBuffer();
-
   /** @param plate */
   public HelpCmd(Commander broker) {
     super(CMD, broker);
@@ -50,22 +48,13 @@ public class HelpCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    synchronized (strBuff) {
-      if (strBuff.length() == 0) {
-        strBuff.append("Command List\r\n");
-        for (AbstractCmd cmd : broker.getCmdList()) {
-          strBuff.append(cmd.getHelp());
-          strBuff.append("\r\n");
-        }
-        strBuff.append("Version 1.0.0\r\n");
-      }
+  public String execute(CmdSocketHandler handler, String[] params) {
+    var builder = new StringBuilder(1024);
+    builder.append("Command List\r\n");
+    for (AbstractCmd cmd : broker.getCmdList()) {
+      builder.append(cmd.getHelp());
+      builder.append("\r\n");
     }
-    return true;
-  }
-
-  @Override
-  public String getOkMessage() {
-    return strBuff.toString();
+    return builder.toString();
   }
 }

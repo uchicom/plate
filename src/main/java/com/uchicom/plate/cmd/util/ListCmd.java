@@ -45,38 +45,33 @@ public class ListCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return true;
-  }
-
-  @Override
-  public String getOkMessage() {
-    StringBuffer strBuff = new StringBuffer(1024);
+  public String execute(CmdSocketHandler handler, String[] params) {
+    var builder = new StringBuilder(1024);
     Map<String, Porter> portMap = broker.getMain().getPortMap();
     Iterator<Entry<String, Porter>> ite = portMap.entrySet().iterator();
     if (ite.hasNext()) {
-      strBuff.append("OK\r\n---plate Infomation---\r\n");
-      strBuff.append(Starter.format.format(new Date()));
-      strBuff.append("\r\n\r\n");
+      builder.append("OK\r\n---plate Infomation---\r\n");
+      builder.append(Starter.format.format(new Date()));
+      builder.append("\r\n\r\n");
       while (ite.hasNext()) {
         // ポート情報
         Entry<String, Porter> ent = ite.next();
 
-        strBuff.append(ent.getKey());
-        strBuff.append("\r\n");
+        builder.append(ent.getKey());
+        builder.append("\r\n");
         // ポートクラスパス情報
         for (CpInfo cpInfo : ent.getValue().getCpList()) {
-          strBuff.append(cpInfo);
+          builder.append(cpInfo);
         }
-        strBuff.append("\r\n");
+        builder.append("\r\n");
         // 別名情報
         for (KeyInfo startingKey : ent.getValue().getList()) {
-          strBuff.append(startingKey);
+          builder.append(startingKey);
         }
       }
     } else {
-      strBuff.append("OK\r\n---plate Infomation---\r\nempty.\r\n");
+      builder.append("OK\r\n---plate Infomation---\r\nempty.\r\n");
     }
-    return strBuff.toString();
+    return builder.toString();
   }
 }

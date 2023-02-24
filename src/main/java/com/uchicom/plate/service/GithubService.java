@@ -17,14 +17,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class GithubService {
-  public boolean download(GithubDto dto, String tag) throws ServiceException {
+  public void download(GithubDto dto, String tag) throws ServiceException {
     try {
       var dirPath = dto.dirPath + "/" + tag;
       var dir = new File(dirPath);
       if (!dir.exists()) {
         if (!dir.mkdirs()) {
-          System.out.println("ディレクトリ作成に失敗しました." + dirPath);
-          return false;
+          throw new ServiceException("ディレクトリ作成に失敗しました." + dirPath);
         }
       }
       var list = new ArrayList<Path>();
@@ -48,7 +47,6 @@ public class GithubService {
     } catch (Exception e) {
       throw new ServiceException(e);
     }
-    return true;
   }
   /** JARダウンロード. */
   List<Path> downloadAssets(String token, String dirPath, String repos, String filter, String tag)

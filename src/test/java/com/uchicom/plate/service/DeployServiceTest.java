@@ -54,7 +54,6 @@ public class DeployServiceTest {
     doNothing()
         .when(service)
         .printFiles(levelCaptor.capture(), dirCaptor.capture(), stringBuilderCaptor.capture());
-    doNothing().when(service).print(textCaptor.capture());
 
     // test
     service.lsdl(dto);

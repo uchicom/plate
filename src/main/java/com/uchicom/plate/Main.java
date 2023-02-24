@@ -3,6 +3,7 @@ package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.scheduler.cron.CronParser;
@@ -24,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -188,10 +190,9 @@ public class Main {
    * @param key
    * @param className
    * @param port
-   * @return
    */
-  public boolean addKey(String key, String className, String port) {
-    return addKey(key, className, "main", port);
+  public void addKey(String key, String className, String port) {
+    addKey(key, className, "main", port);
   }
 
   /**
@@ -201,9 +202,8 @@ public class Main {
    * @param className
    * @param methodName
    * @param port
-   * @return
    */
-  public boolean addKey(String key, String className, String methodName, String port) {
+  public void addKey(String key, String className, String methodName, String port) {
     KeyInfo keyInfo = new KeyInfo(key, className, methodName);
     if (portMap.containsKey(port)) {
       portMap.get(port).getList().add(keyInfo);
@@ -214,7 +214,6 @@ public class Main {
       porter.getList().add(keyInfo);
       portMap.put(port, porter);
     }
-    return true;
   }
 
   /**
@@ -223,31 +222,32 @@ public class Main {
    * @param port
    * @param key
    * @param params
-   * @return
+   * @throws CmdException
    */
-  public boolean callKey(String port, String key, String[] params) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
+  public void callKey(String port, String key, String[] params) throws CmdException {
+    checkPort(port);
+    keyAction(
+        key,
+        port,
+        startingKey -> {
           Starter starter = startingKey.create(params, StarterKind.CALL);
           start(starter);
-          return true;
-        }
-      }
-    }
-    return false;
+        });
   }
 
   /**
    * @param port
    * @param key
    * @param params
-   * @return
+   * @throws CmdException
    */
-  public boolean shutdownKey(String port, String key, String[] params) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
+  public void shutdownKey(String port, String key, String[] params) throws CmdException {
+    checkPort(port);
+
+    keyAction(
+        key,
+        port,
+        startingKey -> {
           // 停止処理
           for (Starter starter : startingKey.getStarterList()) {
             if (!starter.isFinish()) {
@@ -258,7 +258,7 @@ public class Main {
                   starter.shutdown(params);
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                e.printStackTrace(); // TODO utilをverup
               }
             }
           }
@@ -271,48 +271,29 @@ public class Main {
               starter.setFinish(true);
             }
           }
-          return true;
-        }
-      }
-    }
-    return false;
+        });
   }
 
-  /**
-   * キーを編集する。
-   *
-   * @return
-   */
-  public boolean editKey(String key, String className, String methodName, String port) {
-    if (portMap.containsKey(port)) {
-      List<KeyInfo> list = portMap.get(port).getList();
-      for (KeyInfo startKey : list) {
-        if (startKey.getKey().equals(key)) {
+  /** キーを編集する。 */
+  public void editKey(String key, String className, String methodName, String port)
+      throws CmdException {
+    checkPort(port);
+    keyAction(
+        key,
+        port,
+        startingKey -> {
           if (className != null) {
-            startKey.setClassName(className);
+            startingKey.setClassName(className);
             if (methodName != null) {
-              startKey.setMethodName(methodName);
+              startingKey.setMethodName(methodName);
             }
           }
-
-          return true;
-        }
-      }
-    }
-    return false;
+        });
   }
 
-  public boolean renameKey(String key, String newKey, String port) {
-    if (portMap.containsKey(port)) {
-      List<KeyInfo> list = portMap.get(port).getList();
-      for (KeyInfo startKey : list) {
-        if (startKey.getKey().equals(key)) {
-          startKey.setKey(newKey);
-          return true;
-        }
-      }
-    }
-    return false;
+  public void renameKey(String key, String newKey, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.setKey(newKey));
   }
 
   /**
@@ -320,16 +301,12 @@ public class Main {
    *
    * @param key
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean removeKey(String key, String port) {
-    if (portMap.containsKey(port)) {
-      List<KeyInfo> list = portMap.get(port).getList();
-      list.remove(new KeyInfo(key));
-      return true;
-    } else {
-      return false;
-    }
+  public void removeKey(String key, String port) throws CmdException {
+    checkPort(port);
+    List<KeyInfo> list = portMap.get(port).getList();
+    list.remove(new KeyInfo(key));
   }
 
   /**
@@ -337,18 +314,11 @@ public class Main {
    *
    * @param key
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean enableKey(String key, String port) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
-          startingKey.setStatus(KeyInfo.STATUS_ENABLE);
-          return true;
-        }
-      }
-    }
-    return false;
+  public void enableKey(String key, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_ENABLE));
   }
 
   /**
@@ -356,18 +326,11 @@ public class Main {
    *
    * @param key
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean disableKey(String key, String port) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
-          startingKey.setStatus(KeyInfo.STATUS_DISABLE);
-          return true;
-        }
-      }
-    }
-    return false;
+  public void disableKey(String key, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_DISABLE));
   }
 
   /**
@@ -375,18 +338,11 @@ public class Main {
    *
    * @param key
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean autoKey(String key, String port) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
-          startingKey.setRecovery(KeyInfo.AUTO);
-          return true;
-        }
-      }
-    }
-    return false;
+  public void autoKey(String key, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.AUTO));
   }
 
   /**
@@ -394,18 +350,11 @@ public class Main {
    *
    * @param key
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean manualKey(String key, String port) {
-    if (portMap.containsKey(port)) {
-      for (KeyInfo startingKey : portMap.get(port).getList()) {
-        if (startingKey.getKey().equals(key)) {
-          startingKey.setRecovery(KeyInfo.MANUAL);
-          return true;
-        }
-      }
-    }
-    return false;
+  public void manualKey(String key, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.MANUAL));
   }
 
   PlateConfig loadConfig(File file) {
@@ -422,13 +371,11 @@ public class Main {
    * 認証なしで設定ファイルをロードする。
    *
    * @param fileName
-   * @return
    */
-  public boolean load(File file) {
+  public void load(File file) {
     loadFile = file;
     config = loadConfig(file);
     init(config);
-    return true;
   }
 
   void init(PlateConfig config) {
@@ -540,38 +487,35 @@ public class Main {
    * 認証ありで設定を読み込む。
    *
    * @param fileName
-   * @return
+   * @throws CmdException
    */
-  public boolean load(String fileName, String user, String pass) {
-    PlateConfig config = loadConfig(loadFile);
-    String cryptPass = Base64.encode(Crypt.encrypt3(user, pass));
-    if (config.user.equals(user) && config.hash.equals(cryptPass)) {
-      init(config);
-      loadFile = new File(fileName);
-      return true;
+  public void load(String fileName, String user, String pass) throws CmdException {
+    var config = loadConfig(loadFile);
+    var cryptPass = Base64.encode(Crypt.encrypt3(user, pass));
+    if (!config.user.equals(user) || !config.hash.equals(cryptPass)) {
+      throw new CmdException("認証エラー");
     }
-    return false;
+    init(config);
+    loadFile = new File(fileName);
   }
 
-  public boolean save(String user, String pass) {
-    return save(loadFile, user, pass);
+  public void save(String user, String pass) throws CmdException {
+    save(loadFile, user, pass);
   }
   /**
    * 設定を保存する。
    *
    * @param fileName
-   * @return 成功した場合はtrue,それ以外はfalse
+   * @throws CmdException
    */
-  public boolean save(File file, String user, String pass) {
+  public void save(File file, String user, String pass) throws CmdException {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
       config.user = user;
       config.hash = Base64.encode(Crypt.encrypt3(user, pass));
       new Yaml().dump(config, writer);
     } catch (IOException e) {
-      e.printStackTrace();
-      return false;
+      throw new CmdException(e);
     }
-    return true;
   }
 
   /**
@@ -581,15 +525,6 @@ public class Main {
    */
   public Map<String, Porter> getPortMap() {
     return portMap;
-  }
-
-  /**
-   * portMapを設定します。
-   *
-   * @param portMap
-   */
-  public void setPortMap(Map<String, Porter> portMap) {
-    this.portMap = portMap;
   }
 
   /** サーバーを終了する。 */
@@ -633,26 +568,10 @@ public class Main {
    * @param key
    * @param classPath
    * @param port
-   * @return
    */
-  public boolean addCp(String key, CpInfo cpInfo, String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      List<KeyInfo> keyList = porter.getList();
-      int iMaxList = keyList.size();
-      for (int iList = 0; iList < iMaxList; iList++) {
-        KeyInfo startingKey = keyList.get(iList);
-        if (startingKey.getKey().equals(key)) {
-          try {
-            startingKey.addCp(cpInfo);
-            return true;
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    }
-    return false;
+  public void addCp(String key, CpInfo cpInfo, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.addCp(cpInfo));
   }
 
   /**
@@ -661,26 +580,21 @@ public class Main {
    * @param host
    * @param file
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean addCp(String key, String protocol, String host, String file, String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      List<KeyInfo> keyList = porter.getList();
-      int iMaxList = keyList.size();
-      for (int iList = 0; iList < iMaxList; iList++) {
-        KeyInfo startingKey = keyList.get(iList);
-        if (startingKey.getKey().equals(key)) {
+  public void addCp(String key, String protocol, String host, String file, String port)
+      throws CmdException {
+    checkPort(port);
+    keyAction(
+        key,
+        port,
+        startingKey -> {
           try {
             startingKey.addCp(protocol, host, file);
-            return true;
           } catch (Exception e) {
             e.printStackTrace();
           }
-        }
-      }
-    }
-    return false;
+        });
   }
 
   /**
@@ -689,26 +603,11 @@ public class Main {
    * @param key
    * @param iCp
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean removeCp(String key, String iCp, String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      List<KeyInfo> keyList = porter.getList();
-      int iMaxList = keyList.size();
-      for (int iList = 0; iList < iMaxList; iList++) {
-        KeyInfo startingKey = keyList.get(iList);
-        if (startingKey.getKey().equals(key)) {
-          try {
-            startingKey.removeCp(iCp);
-            return true;
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    }
-    return false;
+  public void removeCp(String key, String iCp, String port) throws CmdException {
+    checkPort(port);
+    keyAction(key, port, startingKey -> startingKey.removeCp(iCp));
   }
 
   /**
@@ -716,26 +615,17 @@ public class Main {
    *
    * @param classPath
    * @param port
-   * @return
-   * @throws IOException
+   * @throws CmdException
    */
-  public boolean addPortCp(CpInfo cpInfo, String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      porter.addCp(cpInfo);
-      return true;
-    }
-    return false;
+  public void addPortCp(CpInfo cpInfo, String port) throws CmdException {
+    checkPort(port);
+    portMap.get(port).addCp(cpInfo);
   }
 
-  public boolean addPortCp(String protocol, String host, String file, String port)
-      throws IOException {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      porter.addCp(protocol, host, file);
-      return true;
-    }
-    return false;
+  public void addPortCp(String protocol, String host, String file, String port)
+      throws IOException, CmdException {
+    checkPort(port);
+    portMap.get(port).addCp(protocol, host, file);
   }
 
   /**
@@ -743,53 +633,15 @@ public class Main {
    *
    * @param iCp
    * @param port
-   * @return
+   * @throws CmdException
    */
-  public boolean removePortCp(String iCp, String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      porter.removeCp(iCp);
-      return true;
-    }
-    return false;
+  public void removePortCp(String iCp, String port) throws CmdException {
+    checkPort(port);
+    portMap.get(port).removeCp(iCp);
   }
 
-  /**
-   * CPでURLクラスローダーを用意する
-   *
-   * @param port
-   * @return
-   */
-  public boolean build(String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      porter.build();
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * load中
-   *
-   * @param port
-   * @return
-   */
-  public boolean initBuild(String port) {
-    if (portMap.containsKey(port)) {
-      Porter porter = portMap.get(port);
-      porter.initBuild();
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * 終了したスタートリストを全て削除する。
-   *
-   * @return
-   */
-  public boolean purge() {
+  /** 終了したスタートリストを全て削除する。 */
+  public void purge() {
     Iterator<Entry<String, Porter>> iterator = portMap.entrySet().iterator();
     List<Starter> removeList = new ArrayList<Starter>();
     while (iterator.hasNext()) {
@@ -807,7 +659,6 @@ public class Main {
         removeList.clear();
       }
     }
-    return true;
   }
 
   public File getLoadFile() {
@@ -816,5 +667,21 @@ public class Main {
 
   public PlateConfig getConfig() {
     return config;
+  }
+
+  public void checkPort(String port) throws CmdException {
+    if (!portMap.containsKey(port)) {
+      throw new CmdException("ポートが設定されていません.");
+    }
+  }
+
+  public void keyAction(String key, String port, Consumer<KeyInfo> consumer) throws CmdException {
+    for (KeyInfo startingKey : portMap.get(port).getList()) {
+      if (startingKey.getKey().equals(key)) {
+        consumer.accept(startingKey);
+        return;
+      }
+    }
+    throw new CmdException("キーが設定されていません.");
   }
 }

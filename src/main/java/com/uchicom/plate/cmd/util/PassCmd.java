@@ -55,9 +55,9 @@ public class PassCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     System.out.println("[" + params[0] + "]");
     handler.setPass(params[0]);
-    return true;
+    return null;
   }
 }

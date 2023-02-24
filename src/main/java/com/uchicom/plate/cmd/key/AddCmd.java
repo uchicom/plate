@@ -57,12 +57,12 @@ public class AddCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     if (params.length == 2) {
-      return broker.getMain().addKey(params[0], params[1], handler.getCurrentPort());
-    } else if (params.length == 3) {
-      return broker.getMain().addKey(params[0], params[1], params[2], handler.getCurrentPort());
+      broker.getMain().addKey(params[0], params[1], handler.getCurrentPort());
+    } else {
+      broker.getMain().addKey(params[0], params[1], params[2], handler.getCurrentPort());
     }
-    return false;
+    return null;
   }
 }
