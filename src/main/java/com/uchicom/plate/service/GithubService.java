@@ -3,6 +3,8 @@ package com.uchicom.plate.service;
 
 import com.uchicom.plate.dto.GithubDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
+import com.uchicom.plate.exception.ServiceException;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class GithubService {
-  public boolean download(GithubDto dto, String tag) {
+  public boolean download(GithubDto dto, String tag) throws ServiceException {
     try {
       var dirPath = dto.dirPath + "/" + tag;
       var dir = new File(dirPath);
@@ -45,8 +47,7 @@ public class GithubService {
             System.out.println(file.getName() + ":" + file.length());
           });
     } catch (Exception e) {
-      e.printStackTrace();
-      return false;
+      throw new ServiceException(e);
     }
     return true;
   }

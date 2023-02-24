@@ -3,7 +3,10 @@ package com.uchicom.plate.cmd.deploy;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
+import com.uchicom.plate.exception.ServiceException;
 import com.uchicom.plate.handler.CmdSocketHandler;
+import com.uchicom.plate.service.DeployService;
 
 /**
  * デプロイするコマンド.
@@ -12,12 +15,14 @@ import com.uchicom.plate.handler.CmdSocketHandler;
  */
 public class DeployCmd extends AbstractCmd {
 
+  private final DeployService deployService;
   /** コマンド文字列 */
   public static final String CMD = "deploy";
 
   /** @param plate */
-  public DeployCmd(Commander broker) {
+  public DeployCmd(Commander broker, DeployService deployService) {
     super(CMD, broker);
+    this.deployService = deployService;
   }
 
   /*
@@ -38,8 +43,18 @@ public class DeployCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().deploy(params[0], params[1]);
+  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    var key = params[0];
+    var tag = params[1];
+    var config = broker.getMain().getConfig();
+    if (!config.deploy.containsKey(key)) {
+      throw new CmdException("deploy key:" + key + "は設定されていません.");
+    }
+    try {
+      return deployService.deploy(config.deploy.get(key), tag);
+    } catch (ServiceException e) {
+      throw new CmdException(e);
+    }
   }
 
   /*

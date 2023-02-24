@@ -3,7 +3,9 @@ package com.uchicom.plate.cmd.github;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
+import com.uchicom.plate.service.DeployService;
 
 /**
  * ダウンロードファイルを確認するコマンド.
@@ -12,12 +14,14 @@ import com.uchicom.plate.handler.CmdSocketHandler;
  */
 public class LsdlCmd extends AbstractCmd {
 
+  private final DeployService deployService;
   /** コマンド文字列 */
   public static final String CMD = "lsdl";
 
   /** @param plate */
-  public LsdlCmd(Commander broker) {
+  public LsdlCmd(Commander broker, DeployService deployService) {
     super(CMD, broker);
+    this.deployService = deployService;
   }
 
   /*
@@ -38,8 +42,13 @@ public class LsdlCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().lsdl(params[0]);
+  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    var key = params[0];
+    var config = broker.getMain().getConfig();
+    if (!config.deploy.containsKey(key)) {
+      throw new CmdException("deploy key:" + key + "は設定されていません.");
+    }
+    return deployService.lsdl(config.deploy.get(key));
   }
 
   /*

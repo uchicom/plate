@@ -2,6 +2,7 @@
 package com.uchicom.plate.cmd;
 
 import com.uchicom.plate.Commander;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
@@ -30,7 +31,7 @@ public abstract class AbstractCmd {
    * @param params
    * @return コマンドが正常に完了した場合はtrue,それ以外はfalse
    */
-  public abstract boolean execute(CmdSocketHandler handler, String[] params);
+  public abstract boolean execute(CmdSocketHandler handler, String[] params) throws CmdException;
 
   /**
    * 各コマンドで認証チェックをする。

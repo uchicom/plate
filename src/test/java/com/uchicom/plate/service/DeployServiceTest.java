@@ -10,7 +10,6 @@ import static org.mockito.Mockito.spy;
 import com.uchicom.plate.dto.DeployDto;
 import com.uchicom.plate.dto.DeployFileDto;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -106,7 +105,7 @@ public class DeployServiceTest {
   }
 
   @Test
-  public void deploy() throws IOException {
+  public void deploy() throws Exception {
     // mock
     var service = spy(new DeployService());
     var dto = new DeployDto();
