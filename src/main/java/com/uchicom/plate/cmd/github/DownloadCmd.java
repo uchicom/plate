@@ -3,7 +3,10 @@ package com.uchicom.plate.cmd.github;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
+import com.uchicom.plate.exception.ServiceException;
 import com.uchicom.plate.handler.CmdSocketHandler;
+import com.uchicom.plate.service.GithubService;
 
 /**
  * キーを呼び出すコマンド
@@ -12,12 +15,14 @@ import com.uchicom.plate.handler.CmdSocketHandler;
  */
 public class DownloadCmd extends AbstractCmd {
 
+  private final GithubService githubService;
   /** コマンド文字列 */
   public static final String CMD = "download";
 
   /** @param plate */
-  public DownloadCmd(Commander broker) {
+  public DownloadCmd(Commander broker, GithubService githubService) {
     super(CMD, broker);
+    this.githubService = githubService;
   }
 
   /*
@@ -38,8 +43,18 @@ public class DownloadCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().downloads(params[0], params[1]);
+  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    var key = params[0];
+    var tag = params[1];
+    var config = broker.getMain().getConfig();
+    if (!config.github.containsKey(key)) {
+      throw new CmdException("github key:" + key + "は設定されていません.");
+    }
+    try {
+      return githubService.download(config.github.get(key), tag);
+    } catch (ServiceException e) {
+      throw new CmdException(e);
+    }
   }
 
   /*

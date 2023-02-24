@@ -4,6 +4,7 @@ package com.uchicom.plate.cmd.key;
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.CpInfo;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 import java.net.MalformedURLException;
 
@@ -56,7 +57,7 @@ public class AddCpCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
 
     CpInfo cpInfo = null;
     try {
@@ -66,7 +67,7 @@ public class AddCpCmd extends AbstractCmd {
         cpInfo = new CpInfo(params[1], params[2], params[3]);
       }
     } catch (MalformedURLException e) {
-      return false;
+      throw new CmdException(e);
     }
     return broker.getMain().addCp(params[0], cpInfo, handler.getCurrentPort());
   }

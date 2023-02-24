@@ -2,6 +2,7 @@
 package com.uchicom.plate.service;
 
 import com.uchicom.plate.dto.DeployDto;
+import com.uchicom.plate.exception.ServiceException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,18 +44,16 @@ public class DeployService {
     System.out.println(text);
   }
 
-  public boolean deploy(DeployDto dto, String tag) {
+  public boolean deploy(DeployDto dto, String tag) throws ServiceException {
     var dir = createFile(dto.dirPath, tag);
     if (!dir.exists()) {
-      System.err.println("ディレクトリが存在しません." + dir.getPath());
-      return false;
+      throw new ServiceException("ディレクトリが存在しません." + dir.getPath());
     }
     // ファイル存在チェック
     for (var deployFile : dto.deployFiles) {
       var file = createFile(dir, deployFile.from);
       if (!file.exists()) {
-        System.err.println("ファイルが存在しません." + dir.getPath() + "/" + deployFile.from);
-        return false;
+        throw new ServiceException("ファイルが存在しません." + dir.getPath() + "/" + deployFile.from);
       }
     }
     // ファイル配置
@@ -78,8 +77,7 @@ public class DeployService {
           copy(file.toPath(), createFile(toDir, file.getName()).toPath());
         }
       } catch (IOException e) {
-        e.printStackTrace();
-        return false;
+        throw new ServiceException(e);
       }
     }
     return true;

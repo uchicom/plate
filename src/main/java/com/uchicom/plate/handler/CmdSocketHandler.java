@@ -185,10 +185,15 @@ public class CmdSocketHandler implements Handler {
                     if (cmd.checkConfirm()) {
                       resBuff.append("execute ok ? yes/[no]\r\n");
                     }
-                    if (cmd.execute(this, params)) {
-                      resBuff.append(cmd.getOkMessage());
-                    } else {
-                      resBuff.append(cmd.getNgMessage());
+                    try {
+                      var result = cmd.execute(this, params);
+                      if (result) {
+                        resBuff.append(cmd.getOkMessage());
+                      } else {
+                        resBuff.append(cmd.getNgMessage());
+                      }
+                    } catch (Throwable t) {
+                      resBuff.append("NG: " + t.getMessage() + "\r\n");
                     }
                   } else {
                     resBuff.append("NG: parameter error\r\n");
