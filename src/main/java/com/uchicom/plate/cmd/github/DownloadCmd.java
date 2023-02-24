@@ -43,7 +43,7 @@ public class DownloadCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException{
+  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
     var tag = params[1];
     var config = broker.getMain().getConfig();

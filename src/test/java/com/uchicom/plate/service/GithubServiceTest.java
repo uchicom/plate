@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 public class GithubServiceTest {
   @Test
-  public void downloadJar() {
+  public void downloadJar() throws Exception {
     var service = new GithubService();
     var dto = new GithubDto();
     dto.dirPath = "/workspace/plate/release";
@@ -23,7 +23,7 @@ public class GithubServiceTest {
   }
 
   @Test
-  public void downloadZip() {
+  public void downloadZip() throws Exception {
     var service = new GithubService();
     var dto = new GithubDto();
     dto.dirPath = "/workspace/plate/release";
@@ -36,7 +36,7 @@ public class GithubServiceTest {
   }
 
   @Test
-  public void downloadTar() {
+  public void downloadTar() throws Exception {
     var service = new GithubService();
     var dto = new GithubDto();
     dto.dirPath = "/workspace/plate/release";

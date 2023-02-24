@@ -36,7 +36,6 @@ import com.uchicom.plate.handler.CmdServerHandler;
 import com.uchicom.plate.handler.Handler;
 import com.uchicom.plate.service.DeployService;
 import com.uchicom.plate.service.GithubService;
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;

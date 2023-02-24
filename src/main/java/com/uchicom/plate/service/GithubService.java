@@ -4,7 +4,6 @@ package com.uchicom.plate.service;
 import com.uchicom.plate.dto.GithubDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
 import com.uchicom.plate.exception.ServiceException;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
