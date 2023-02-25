@@ -56,8 +56,8 @@ public class DSetCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     System.setProperty(params[0], params[1]);
-    return true;
+    return null;
   }
 }

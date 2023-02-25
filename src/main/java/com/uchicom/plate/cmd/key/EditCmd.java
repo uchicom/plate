@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.key;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /** @author Uchiyama Shigeki */
@@ -48,14 +49,14 @@ public class EditCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     if (params.length == 1) {
-      return broker.getMain().editKey(params[0], null, null, handler.getCurrentPort());
+      broker.getMain().editKey(params[0], null, null, handler.getCurrentPort());
     } else if (params.length == 2) {
-      return broker.getMain().editKey(params[0], params[1], null, handler.getCurrentPort());
-    } else if (params.length == 3) {
-      return broker.getMain().editKey(params[0], params[1], params[2], handler.getCurrentPort());
+      broker.getMain().editKey(params[0], params[1], null, handler.getCurrentPort());
+    } else {
+      broker.getMain().editKey(params[0], params[1], params[2], handler.getCurrentPort());
     }
-    return false;
+    return null;
   }
 }

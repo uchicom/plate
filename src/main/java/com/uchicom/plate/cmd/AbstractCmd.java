@@ -31,7 +31,7 @@ public abstract class AbstractCmd {
    * @param params
    * @return コマンドが正常に完了した場合はtrue,それ以外はfalse
    */
-  public abstract boolean execute(CmdSocketHandler handler, String[] params) throws CmdException;
+  public abstract String execute(CmdSocketHandler handler, String[] params) throws CmdException;
 
   /**
    * 各コマンドで認証チェックをする。
@@ -78,23 +78,5 @@ public abstract class AbstractCmd {
    */
   public String getName() {
     return name;
-  }
-
-  /**
-   * コマンド実行結果がOKの場合のメッセージを取得する。
-   *
-   * @return
-   */
-  public String getOkMessage() {
-    return "OK\r\n";
-  }
-
-  /**
-   * コマンド実行結果がNGの場合のメッセージを取得する。
-   *
-   * @return
-   */
-  public String getNgMessage() {
-    return "NG\r\n";
   }
 }

@@ -37,8 +37,8 @@ public class ShutdownCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     broker.getMain().exit();
-    return true;
+    return null;
   }
 }

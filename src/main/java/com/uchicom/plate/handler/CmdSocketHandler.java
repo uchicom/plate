@@ -187,11 +187,10 @@ public class CmdSocketHandler implements Handler {
                     }
                     try {
                       var result = cmd.execute(this, params);
-                      if (result) {
-                        resBuff.append(cmd.getOkMessage());
-                      } else {
-                        resBuff.append(cmd.getNgMessage());
+                      if (result != null) {
+                        resBuff.append(result);
                       }
+                      resBuff.append("OK\r\n");
                     } catch (Throwable t) {
                       resBuff.append("NG: " + t.getMessage() + "\r\n");
                     }

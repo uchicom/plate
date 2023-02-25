@@ -57,7 +57,7 @@ public class AddCpCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
 
     CpInfo cpInfo = null;
     try {
@@ -69,6 +69,7 @@ public class AddCpCmd extends AbstractCmd {
     } catch (MalformedURLException e) {
       throw new CmdException(e);
     }
-    return broker.getMain().addCp(params[0], cpInfo, handler.getCurrentPort());
+    broker.getMain().addCp(params[0], cpInfo, handler.getCurrentPort());
+    return null;
   }
 }

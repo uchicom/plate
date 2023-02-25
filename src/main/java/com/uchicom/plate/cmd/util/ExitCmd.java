@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.util;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 import java.io.IOException;
 
@@ -51,15 +52,15 @@ public class ExitCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     // writer.write("Good bye!\r\n");
     // writer.flush();
 
     try {
       handler.exit();
     } catch (IOException e) {
-      return false;
+      throw new CmdException(e);
     }
-    return true;
+    return null;
   }
 }

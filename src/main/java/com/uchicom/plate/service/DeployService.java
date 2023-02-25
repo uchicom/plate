@@ -13,12 +13,11 @@ import java.util.List;
 
 public class DeployService {
 
-  public boolean lsdl(DeployDto dto) {
+  public String lsdl(DeployDto dto) {
     var root = createFile(dto.dirPath);
     var builder = new StringBuilder(1024);
     printFiles(0, root, builder);
-    print(builder.toString());
-    return true;
+    return builder.toString();
   }
 
   void printFiles(int level, File dir, StringBuilder builder) {
@@ -38,10 +37,6 @@ public class DeployService {
       builder.append(" ");
     }
     return builder;
-  }
-
-  void print(String text) {
-    System.out.println(text);
   }
 
   public boolean deploy(DeployDto dto, String tag) throws ServiceException {

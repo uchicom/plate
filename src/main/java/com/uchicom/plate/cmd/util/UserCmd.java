@@ -55,8 +55,8 @@ public class UserCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     handler.setUser(params[0]);
-    return true;
+    return null;
   }
 }

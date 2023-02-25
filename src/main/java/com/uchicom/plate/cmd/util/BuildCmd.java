@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.util;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /** @author Uchiyama Shigeki */
@@ -54,11 +55,17 @@ public class BuildCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     String port = handler.getCurrentPort();
     if (params.length == 1) {
       port = params[params.length - 1];
     }
-    return broker.getMain().build(port);
+    var portMap = broker.getMain().getPortMap();
+    if (!portMap.containsKey(port)) {
+      throw new CmdException("ポート番号は存在しません." + port);
+    }
+    var porter = portMap.get(port);
+    porter.build();
+    return null;
   }
 }

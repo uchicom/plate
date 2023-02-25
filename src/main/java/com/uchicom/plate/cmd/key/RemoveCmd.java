@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.key;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
@@ -56,7 +57,8 @@ public class RemoveCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().removeKey(params[0], handler.getCurrentPort());
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    broker.getMain().removeKey(params[0], handler.getCurrentPort());
+    return null;
   }
 }

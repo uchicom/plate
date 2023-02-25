@@ -43,7 +43,7 @@ public class DeployCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
     var tag = params[1];
     var config = broker.getMain().getConfig();
@@ -51,7 +51,8 @@ public class DeployCmd extends AbstractCmd {
       throw new CmdException("deploy key:" + key + "は設定されていません.");
     }
     try {
-      return deployService.deploy(config.deploy.get(key), tag);
+      deployService.deploy(config.deploy.get(key), tag);
+      return null;
     } catch (ServiceException e) {
       throw new CmdException(e);
     }

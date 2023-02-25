@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.port;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
@@ -52,12 +53,11 @@ public class UseCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    if (broker.getMain().exists(params[0])) {
-      handler.setCurrentPort(params[0]);
-      return true;
-    } else {
-      return false;
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    if (!broker.getMain().exists(params[0])) {
+      throw new CmdException("ポートが設定されていません.");
     }
+    handler.setCurrentPort(params[0]);
+    return null;
   }
 }

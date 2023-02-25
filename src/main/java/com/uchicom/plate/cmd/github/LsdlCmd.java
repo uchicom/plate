@@ -42,7 +42,7 @@ public class LsdlCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) throws CmdException {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
     var config = broker.getMain().getConfig();
     if (!config.deploy.containsKey(key)) {

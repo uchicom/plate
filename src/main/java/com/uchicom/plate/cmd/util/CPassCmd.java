@@ -46,11 +46,11 @@ public class CPassCmd extends AbstractCmd {
    * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) {
     broker
         .getMain()
         .setCryptPass(Base64.encode(Crypt.encrypt3(broker.getMain().getUser(), params[0])));
     handler.setPass(params[0]);
-    return true;
+    return null;
   }
 }

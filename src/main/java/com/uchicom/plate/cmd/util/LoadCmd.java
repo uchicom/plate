@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.util;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
@@ -52,7 +53,8 @@ public class LoadCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().load(params[0], handler.getUser(), handler.getPass());
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
+    broker.getMain().load(params[0], handler.getUser(), handler.getPass());
+    return null;
   }
 }

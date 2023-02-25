@@ -23,8 +23,9 @@ public class PurgeCmd extends AbstractCmd {
    * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
-    return broker.getMain().purge();
+  public String execute(CmdSocketHandler handler, String[] params) {
+    broker.getMain().purge();
+    return null;
   }
 
   /* (non-Javadoc)

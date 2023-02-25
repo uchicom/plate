@@ -3,6 +3,7 @@ package com.uchicom.plate.cmd.util;
 
 import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
+import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 import java.io.File;
 
@@ -53,13 +54,12 @@ public class SaveCmd extends AbstractCmd {
    * CmdSocketHandler, java.lang.String[])
    */
   @Override
-  public boolean execute(CmdSocketHandler handler, String[] params) {
+  public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     if (params.length == 1) {
-      return broker.getMain().save(new File(params[0]), handler.getUser(), handler.getPass());
-    } else if (params.length == 0) {
-      return broker.getMain().save(handler.getUser(), handler.getPass());
+      broker.getMain().save(new File(params[0]), handler.getUser(), handler.getPass());
     } else {
-      return false;
+      broker.getMain().save(handler.getUser(), handler.getPass());
     }
+    return null;
   }
 }
