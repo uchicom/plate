@@ -17,39 +17,40 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class GithubService {
-  public void download(GithubDto dto, String tag) throws ServiceException {
+  public String download(GithubDto dto, String tag) throws ServiceException {
     try {
-      var dirPath = dto.dirPath + "/" + tag;
-      var dir = new File(dirPath);
+      var dir = createFile(dto.dirPath, tag);
       if (!dir.exists()) {
         if (!dir.mkdirs()) {
-          throw new ServiceException("ディレクトリ作成に失敗しました." + dirPath);
+          throw new ServiceException("ディレクトリ作成に失敗しました." + dir.getPath());
         }
       }
       var list = new ArrayList<Path>();
       for (var downloadFile : dto.downloadFiles) {
         switch (downloadFile.kind) {
           case ASSETS:
-            list.addAll(downloadAssets(dto.token, dirPath, dto.repos, downloadFile.filter, tag));
+            list.addAll(downloadAssets(dto.token, dir, dto.repos, downloadFile.filter, tag));
             break;
           case TARBALL:
           case ZIPBALL:
-            list.add(downloadFile(dto.token, dirPath, dto.repos, downloadFile.kind, tag));
+            list.add(downloadFile(dto.token, dir, dto.repos, downloadFile.kind, tag));
           default:
             // fall through
         }
       }
+      StringBuilder builder = new StringBuilder(1024);
       list.forEach(
           path -> {
             var file = path.toFile();
-            System.out.println(file.getName() + ":" + file.length());
+            builder.append(file.getName() + ":" + file.length());
           });
+      return builder.toString();
     } catch (Exception e) {
       throw new ServiceException(e);
     }
   }
   /** JARダウンロード. */
-  List<Path> downloadAssets(String token, String dirPath, String repos, String filter, String tag)
+  List<Path> downloadAssets(String token, File dir, String repos, String filter, String tag)
       throws IOException, InterruptedException {
     String body = dowload(token, repos, DownloadFileKind.TAGS, tag, BodyHandlers.ofString());
     var matcher =
@@ -63,7 +64,7 @@ public class GithubService {
               repos,
               DownloadFileKind.ASSETS,
               matcher.group(1),
-              BodyHandlers.ofFile(Path.of(dirPath + "/" + matcher.group(2)))));
+              BodyHandlers.ofFile(new File(dir, matcher.group(2)).toPath())));
     }
     return list;
   }
@@ -72,22 +73,21 @@ public class GithubService {
    * ファイルダウンロード.
    *
    * @param token
-   * @param dirPath
+   * @param dir
    * @param repos
    * @param downloadKind
    * @param tag
    * @throws IOException
    * @throws InterruptedException
    */
-  Path downloadFile(
-      String token, String dirPath, String repos, DownloadFileKind downloadKind, String tag)
+  Path downloadFile(String token, File dir, String repos, DownloadFileKind downloadKind, String tag)
       throws IOException, InterruptedException {
     return dowload(
         token,
         repos,
         downloadKind,
         tag,
-        BodyHandlers.ofFile(Path.of(dirPath + "/" + downloadKind.getFileName(tag))));
+        BodyHandlers.ofFile(new File(dir, downloadKind.getFileName(tag)).toPath()));
   }
 
   <T> T dowload(
@@ -123,5 +123,9 @@ public class GithubService {
   URI createUri(String repos, DownloadFileKind downloadKind, String param) {
     var uri = "https://api.github.com" + createPath(repos, downloadKind, param);
     return URI.create(uri);
+  }
+
+  File createFile(String parent, String child) {
+    return new File(parent, child);
   }
 }
