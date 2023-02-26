@@ -10,6 +10,7 @@ import com.uchicom.plate.scheduler.cron.CronParser;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
+import com.uchicom.util.ThrowingConsumer;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -258,7 +258,7 @@ public class Main {
                   starter.shutdown(params);
                 }
               } catch (Exception e) {
-                e.printStackTrace(); // TODO utilをverup
+                throw new CmdException(e);
               }
             }
           }
@@ -592,7 +592,7 @@ public class Main {
           try {
             startingKey.addCp(protocol, host, file);
           } catch (Exception e) {
-            e.printStackTrace();
+            throw new CmdException(e);
           }
         });
   }
@@ -675,7 +675,8 @@ public class Main {
     }
   }
 
-  public void keyAction(String key, String port, Consumer<KeyInfo> consumer) throws CmdException {
+  public void keyAction(String key, String port, ThrowingConsumer<KeyInfo, CmdException> consumer)
+      throws CmdException {
     for (KeyInfo startingKey : portMap.get(port).getList()) {
       if (startingKey.getKey().equals(key)) {
         consumer.accept(startingKey);
