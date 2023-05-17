@@ -15,7 +15,9 @@ public class AddCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "add";
 
-  /** @param broker */
+  /**
+   * @param broker
+   */
   public AddCmd(Commander broker) {
     super(CMD, broker);
   }

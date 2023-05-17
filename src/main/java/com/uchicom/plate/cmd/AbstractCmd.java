@@ -7,7 +7,9 @@ import com.uchicom.plate.handler.CmdSocketHandler;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public abstract class AbstractCmd {
 
   /** コマンドを束ねるコマンダークラス */

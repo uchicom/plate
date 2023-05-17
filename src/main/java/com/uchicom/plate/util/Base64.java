@@ -1,7 +1,9 @@
 // (C) 2012 uchicom
 package com.uchicom.plate.util;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class Base64 {
 
   public static String encode(byte[] bytes) {

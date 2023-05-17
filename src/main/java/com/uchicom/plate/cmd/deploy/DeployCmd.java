@@ -19,7 +19,9 @@ public class DeployCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "deploy";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public DeployCmd(Commander broker, DeployService deployService) {
     super(CMD, broker);
     this.deployService = deployService;

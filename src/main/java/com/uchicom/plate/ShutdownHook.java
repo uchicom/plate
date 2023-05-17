@@ -11,7 +11,9 @@ public class ShutdownHook extends Thread {
   /** plate */
   private Main plate;
 
-  /** @param isskei */
+  /**
+   * @param isskei
+   */
   public ShutdownHook(Main plate) {
     this.plate = plate;
   }

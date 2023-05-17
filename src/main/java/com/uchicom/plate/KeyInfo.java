@@ -209,7 +209,9 @@ public class KeyInfo {
     return starter;
   }
 
-  /** @param classPath */
+  /**
+   * @param classPath
+   */
   public void addCp(CpInfo cpInfo) {
     cpList.add(cpInfo);
   }
@@ -224,7 +226,9 @@ public class KeyInfo {
     cpList.add(new CpInfo(protocol, host, file));
   }
 
-  /** @param classPath */
+  /**
+   * @param classPath
+   */
   public void removeCp(String iCp) {
     for (CpInfo cpInfo : cpList) {
       if (iCp.equals(cpInfo.getUrl().getPath())) {

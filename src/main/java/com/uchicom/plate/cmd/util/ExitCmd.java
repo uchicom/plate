@@ -19,7 +19,9 @@ public class ExitCmd extends AbstractCmd {
 
   //
   // private ConnectChecker checker = null;
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public ExitCmd(Commander broker) {
     super(CMD, broker);
   }

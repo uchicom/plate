@@ -16,7 +16,9 @@ public class CallCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "call";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public CallCmd(Commander broker) {
     super(CMD, broker);
   }

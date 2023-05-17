@@ -17,7 +17,9 @@ public class SaveCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "save";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public SaveCmd(Commander broker) {
     super(CMD, broker);
   }

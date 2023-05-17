@@ -16,7 +16,9 @@ public class DisableCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "disable";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public DisableCmd(Commander broker) {
     super(CMD, broker);
   }

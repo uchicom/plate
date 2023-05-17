@@ -11,7 +11,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.Map;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class CmdSocketHandler implements Handler {
 
   //    private static final ByteBuffer CMD_SET = ByteBuffer.wrap(new byte[] {
@@ -30,7 +32,9 @@ public class CmdSocketHandler implements Handler {
   /** ソケットチャンネル */
   private SocketChannel socketChannel;
 
-  /** @param socketChannel */
+  /**
+   * @param socketChannel
+   */
   public CmdSocketHandler(SocketChannel socketChannel) {
     this.socketChannel = socketChannel;
   }
