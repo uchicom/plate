@@ -7,7 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class ConnectSocketHandler implements Handler {
   private static final ByteBuffer lineOff =
       ByteBuffer.wrap(new byte[] {Telnet.IAC, Telnet.WILL, Telnet.TELNET_LINE_MODE});

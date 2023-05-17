@@ -4,7 +4,9 @@ package com.uchicom.plate.handler;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public interface Handler {
 
   /**

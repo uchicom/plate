@@ -18,7 +18,9 @@ public class LsdlCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "lsdl";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public LsdlCmd(Commander broker, DeployService deployService) {
     super(CMD, broker);
     this.deployService = deployService;

@@ -18,7 +18,9 @@ public class AddCpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "addcp";
 
-  /** @param broker */
+  /**
+   * @param broker
+   */
   public AddCpCmd(Commander broker) {
     super(CMD, broker);
   }

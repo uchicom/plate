@@ -19,7 +19,9 @@ public class DownloadCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "download";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public DownloadCmd(Commander broker, GithubService githubService) {
     super(CMD, broker);
     this.githubService = githubService;

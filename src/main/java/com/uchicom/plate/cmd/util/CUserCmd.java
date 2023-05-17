@@ -7,13 +7,17 @@ import com.uchicom.plate.handler.CmdSocketHandler;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class CUserCmd extends AbstractCmd {
 
   /** コマンド文字列 */
   public static final String CMD = "cuser";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public CUserCmd(Commander broker) {
     super(CMD, broker);
   }

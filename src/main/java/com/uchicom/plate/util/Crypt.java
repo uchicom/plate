@@ -34,8 +34,11 @@ public class Crypt {
   }
 
   public static String encrypt2(String key, String text)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-          IllegalBlockSizeException, BadPaddingException {
+      throws NoSuchAlgorithmException,
+          NoSuchPaddingException,
+          InvalidKeyException,
+          IllegalBlockSizeException,
+          BadPaddingException {
     SecretKeySpec spec = new SecretKeySpec(key.getBytes(), "AES");
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, spec);
@@ -44,8 +47,11 @@ public class Crypt {
   }
 
   public static String decrypt2(String key, String code)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-          IllegalBlockSizeException, BadPaddingException {
+      throws NoSuchAlgorithmException,
+          NoSuchPaddingException,
+          InvalidKeyException,
+          IllegalBlockSizeException,
+          BadPaddingException {
     SecretKeySpec spec = new SecretKeySpec(key.getBytes(), "AES");
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.DECRYPT_MODE, spec);

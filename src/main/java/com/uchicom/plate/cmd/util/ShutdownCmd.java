@@ -15,7 +15,9 @@ public class ShutdownCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "shutdown";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public ShutdownCmd(Commander broker) {
     super(CMD, broker);
   }

@@ -16,7 +16,9 @@ public class LoadCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "load";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public LoadCmd(Commander broker) {
     super(CMD, broker);
   }

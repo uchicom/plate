@@ -16,7 +16,9 @@ public class EnableCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "enable";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public EnableCmd(Commander broker) {
     super(CMD, broker);
   }

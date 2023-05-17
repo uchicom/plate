@@ -23,7 +23,9 @@ public class ListCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "list";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public ListCmd(Commander broker) {
     super(CMD, broker);
   }

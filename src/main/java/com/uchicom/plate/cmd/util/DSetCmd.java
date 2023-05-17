@@ -5,7 +5,9 @@ import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
-/** @author uchicom: Shigeki Uchiyama */
+/**
+ * @author uchicom: Shigeki Uchiyama
+ */
 public class DSetCmd extends AbstractCmd {
 
   /** コマンド文字列 */
