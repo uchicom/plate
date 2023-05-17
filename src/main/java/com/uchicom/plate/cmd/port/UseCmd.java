@@ -16,7 +16,9 @@ public class UseCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "use";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public UseCmd(Commander broker) {
     super(CMD, broker);
   }

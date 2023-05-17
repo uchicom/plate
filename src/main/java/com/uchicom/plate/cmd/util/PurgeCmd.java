@@ -15,7 +15,9 @@ public class PurgeCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "purge";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public PurgeCmd(Commander broker) {
     super(CMD, broker);
   }

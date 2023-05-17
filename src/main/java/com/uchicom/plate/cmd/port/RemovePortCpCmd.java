@@ -16,7 +16,9 @@ public class RemovePortCpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "removeportcp";
 
-  /** @param broker */
+  /**
+   * @param broker
+   */
   public RemovePortCpCmd(Commander broker) {
     super(CMD, broker);
   }

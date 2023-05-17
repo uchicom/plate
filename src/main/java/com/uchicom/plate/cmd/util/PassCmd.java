@@ -5,13 +5,17 @@ import com.uchicom.plate.Commander;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class PassCmd extends AbstractCmd {
 
   /** コマンド文字列 */
   public static final String CMD = "pass";
 
-  /** @param broker */
+  /**
+   * @param broker
+   */
   public PassCmd(Commander broker) {
     super(CMD, broker);
   }

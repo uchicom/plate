@@ -226,8 +226,12 @@ public class Starter implements ThrowRunnable<Throwable> {
    * @throws InvocationTargetException
    */
   public void invoke(String[] params)
-      throws SecurityException, NoSuchMethodException, ClassNotFoundException,
-          IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+      throws SecurityException,
+          NoSuchMethodException,
+          ClassNotFoundException,
+          IllegalArgumentException,
+          IllegalAccessException,
+          InvocationTargetException {
     invoke(startingKey.getMethodName() == null ? "main" : startingKey.getMethodName(), params);
   }
 
@@ -242,8 +246,12 @@ public class Starter implements ThrowRunnable<Throwable> {
    * @throws NoSuchMethodException
    */
   public void invoke(String methodName, String[] params)
-      throws ClassNotFoundException, IllegalArgumentException, IllegalAccessException,
-          InvocationTargetException, SecurityException, NoSuchMethodException {
+      throws ClassNotFoundException,
+          IllegalArgumentException,
+          IllegalAccessException,
+          InvocationTargetException,
+          SecurityException,
+          NoSuchMethodException {
     System.out.println(Thread.currentThread().getContextClassLoader());
     if (startingKey.getClassLoader() != null) {
       Thread.currentThread().setContextClassLoader(startingKey.getClassLoader());

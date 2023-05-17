@@ -71,7 +71,9 @@ public class Porter { // implements Runnable {
     this.cpList = cpList;
   }
 
-  /** @param classPath */
+  /**
+   * @param classPath
+   */
   public void addCp(CpInfo cpInfo) {
     cpList.add(cpInfo);
   }
@@ -86,7 +88,9 @@ public class Porter { // implements Runnable {
     cpList.add(new CpInfo(protocol, host, file));
   }
 
-  /** @param classPath */
+  /**
+   * @param classPath
+   */
   public void removeCp(String iCp) {
     cpList.remove(Integer.parseInt(iCp));
   }

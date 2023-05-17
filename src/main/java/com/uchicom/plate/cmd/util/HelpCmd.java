@@ -15,7 +15,9 @@ public class HelpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "help";
 
-  /** @param plate */
+  /**
+   * @param plate
+   */
   public HelpCmd(Commander broker) {
     super(CMD, broker);
   }

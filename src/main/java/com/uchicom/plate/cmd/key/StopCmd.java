@@ -6,13 +6,17 @@ import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class StopCmd extends AbstractCmd {
 
   /** コマンド文字列 */
   public static final String CMD = "stop";
 
-  /** @param broker */
+  /**
+   * @param broker
+   */
   public StopCmd(Commander broker) {
     super(CMD, broker);
   }

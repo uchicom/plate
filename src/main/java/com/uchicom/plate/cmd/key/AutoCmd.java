@@ -6,7 +6,9 @@ import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
-/** @author Uchiyama Shigeki */
+/**
+ * @author Uchiyama Shigeki
+ */
 public class AutoCmd extends AbstractCmd {
 
   /** コマンド文字列 */
