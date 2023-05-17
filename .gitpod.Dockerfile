@@ -1,4 +1,4 @@
-FROM maven:3.8.6-eclipse-temurin-17
+FROM maven:3-eclipse-temurin-20
 
 ### Time Zone ###
 ENV TZ Asia/Tokyo

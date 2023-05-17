@@ -48,8 +48,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>20</source>
+                    <target>20</target>
                     <encoding>UTF-8</encoding>
 			          <fork>true</fork>
 			          <compilerArgs>
@@ -144,7 +144,7 @@
 						    <importOrder />
     							<removeUnusedImports />
                         <googleJavaFormat>
-                            <version>1.7</version>
+                            <version>1.16.0</version>
                             <style>GOOGLE</style>
                         </googleJavaFormat>
                         <licenseHeader>
