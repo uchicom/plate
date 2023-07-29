@@ -4,7 +4,6 @@ package com.uchicom.plate;
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.exception.CmdException;
-import com.uchicom.plate.module.MainModule;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.util.Base64;

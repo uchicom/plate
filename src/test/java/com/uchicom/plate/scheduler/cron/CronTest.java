@@ -3,13 +3,10 @@ package com.uchicom.plate.scheduler.cron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mockStatic;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 public class CronTest {
   @Test
@@ -84,7 +81,6 @@ public class CronTest {
   public void constractor() {
     Cron cron = new Cron(new String[] {"0", "9", "*", "*", "*"});
     assertEquals(12 * 31, cron.triggers.length);
-    assertTrue(cron.scheduledTriggerIndex > -1);
   }
 
   @Test
@@ -132,11 +128,9 @@ public class CronTest {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
     LocalDateTime nextYear = now.plusYears(1);
     LocalDateTime yearAfterNext = nextYear.plusYears(1);
-    Cron cron = null;
-    try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-      mocked.when(LocalDateTime::now).thenReturn(now);
-      cron = new Cron("0", "0", "14", "2", "*");
-    }
+    Cron cron = new Cron("0", "0", "14", "2", "*");
+    cron.setScheduledTriggerIndex(now);
+
     assertEquals(1, cron.triggers.length);
     assertEquals(2140000, cron.triggers[0]);
     assertThat(cron.nextDateTime()).isEqualTo(now);
@@ -148,11 +142,9 @@ public class CronTest {
   @Test
   public void nextDateTimeDayOfWeek() {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
-    Cron cron = null;
-    try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-      mocked.when(LocalDateTime::now).thenReturn(now);
-      cron = new Cron("0", "0", "*", "2", "2");
-    }
+    Cron cron = new Cron("0", "0", "*", "2", "2");
+    cron.setScheduledTriggerIndex(now);
+
     assertEquals(31, cron.triggers.length);
     assertThat(cron.nextDateTime()).isEqualTo(LocalDateTime.of(2022, 2, 15, 0, 0, 0));
     assertThat(cron.nextDateTime()).isEqualTo(LocalDateTime.of(2022, 2, 22, 0, 0, 0));
@@ -165,12 +157,8 @@ public class CronTest {
     LocalDateTime now = LocalDateTime.of(2024, 02, 28, 0, 0, 0);
     LocalDateTime nextDay = now.plusDays(1);
     LocalDateTime nextYear = now.plusYears(1).withDayOfMonth(1);
-    Cron cron = null;
-    try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-      mocked.when(LocalDateTime::now).thenReturn(now);
-
-      cron = new Cron("0", "0", "*", "2", "*");
-    }
+    Cron cron = new Cron("0", "0", "*", "2", "*");
+    cron.setScheduledTriggerIndex(now);
     assertEquals(31, cron.triggers.length);
     assertThat(cron.nextDateTime()).isEqualTo(now);
     assertThat(cron.nextDateTime()).isEqualTo(nextDay);
@@ -181,12 +169,8 @@ public class CronTest {
   @Test
   public void checkDayOfWeek() {
     LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
-    Cron cron = null;
-    try (MockedStatic<LocalDateTime> mocked = mockStatic(LocalDateTime.class)) {
-      mocked.when(LocalDateTime::now).thenReturn(now);
-
-      cron = new Cron("0", "0", "*", "2", "1-3,7");
-    }
+    Cron cron = new Cron("0", "0", "*", "2", "1-3,7");
+    cron.setScheduledTriggerIndex(now);
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 14))).isTrue(); // Mon
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 15))).isTrue(); // Tsu
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 16))).isTrue(); // Wed
