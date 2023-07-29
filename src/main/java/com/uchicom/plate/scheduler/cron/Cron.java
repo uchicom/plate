@@ -36,7 +36,6 @@ public class Cron {
     month = description[3];
     dayOfWeek = description[4];
     initTriggers(minute, hour, day, month, dayOfWeek);
-    setScheduledTriggerIndex();
   }
 
   public Cron(String minute, String hour, String day, String month, String dayOfWeek) {
@@ -46,7 +45,6 @@ public class Cron {
     this.month = month;
     this.dayOfWeek = dayOfWeek;
     initTriggers(minute, hour, day, month, dayOfWeek);
-    setScheduledTriggerIndex();
   }
 
   int[] parse(String pattern) {
@@ -74,13 +72,12 @@ public class Cron {
     return month * 100_00_00 + day * 100_00 + hour * 100 + minute;
   }
 
-  void setScheduledTriggerIndex() {
-    LocalDateTime now = LocalDateTime.now();
+  public void setScheduledTriggerIndex(LocalDateTime now) {
     int nowTrigger =
         createTrigger(now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute());
     scheduledTriggerIndex = getIndexByNibun(nowTrigger, 0, triggers.length);
     if (scheduledTriggerIndex == triggers.length - 1) {
-      targetYear = now.getYear() - 1;
+      targetYear = now.getYear() + 1;
     } else {
       targetYear = now.getYear();
     }

@@ -220,4 +220,7 @@ public class CronTest {
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 19))).isTrue(); // Sat
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 20))).isTrue(); // Sun
   }
+
+  @Test
+  public void setScheduledTriggerIndex() {}
 }

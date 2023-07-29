@@ -4,14 +4,19 @@ package com.uchicom.plate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.uchicom.plate.dto.PlateConfig;
+import com.uchicom.plate.scheduler.ScheduleFactory;
 import java.io.File;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
-public class MainTest {
+public class MainTest extends AbstractTest {
+  @Mock ScheduleFactory scheduleFactory;
+
+  @InjectMocks Main main;
 
   @Test
   public void loadConfig() throws Exception {
-    Main main = new Main();
     PlateConfig actual = main.loadConfig(new File("./src/test/resources/config.yml"));
     assertThat(actual).isNotNull();
     assertThat(actual.service).isNotNull();
