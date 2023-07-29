@@ -77,7 +77,7 @@ public class Cron {
         createTrigger(now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute());
     scheduledTriggerIndex = getIndexByNibun(nowTrigger, 0, triggers.length);
     if (scheduledTriggerIndex == triggers.length - 1) {
-      targetYear = now.getYear() + 1;
+      targetYear = now.getYear() - 1;
     } else {
       targetYear = now.getYear();
     }
