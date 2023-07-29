@@ -3,6 +3,7 @@ package com.uchicom.plate.scheduler;
 
 import com.uchicom.plate.Starter;
 import com.uchicom.plate.scheduler.cron.Cron;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -14,8 +15,9 @@ public class Schedule {
   Starter starter;
   ZonedDateTime nextDateTime;
 
-  public Schedule(Cron cron) {
+  public Schedule(Cron cron, LocalDateTime now) {
     this.cron = cron;
+    cron.setScheduledTriggerIndex(now);
   }
 
   public void register(Timer timer, Starter starter) {
@@ -24,11 +26,11 @@ public class Schedule {
     register();
   }
 
-  public void register() {
+  void register() {
     register(new ScheduleTimerTask(this, starter));
   }
 
-  public void register(ScheduleTimerTask timerTask) {
+  void register(ScheduleTimerTask timerTask) {
     timer.schedule(timerTask, nextDate());
   }
 

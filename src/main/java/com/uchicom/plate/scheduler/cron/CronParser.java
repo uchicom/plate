@@ -2,8 +2,11 @@
 package com.uchicom.plate.scheduler.cron;
 
 import com.uchicom.plate.util.Parser;
+import javax.inject.Inject;
 
 public class CronParser implements Parser<Cron> {
+  @Inject
+  public CronParser() {}
   /**
    * @param description 分　時　日　月　曜日　コマンド
    */

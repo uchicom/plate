@@ -16,7 +16,7 @@ public class ScheduleTest {
   public void nextDate1() {
     Cron cron = mock(Cron.class);
     doReturn(LocalDateTime.of(2022, 2, 14, 0, 0, 0)).when(cron).nextDateTime();
-    Schedule schedule = new Schedule(cron);
+    Schedule schedule = new Schedule(cron, LocalDateTime.of(2023, 7, 30, 12, 34, 56));
     assertThat(schedule.nextDate())
         .isEqualTo(
             Date.from(

@@ -6,11 +6,11 @@ import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
-import com.uchicom.plate.scheduler.cron.CronParser;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
 import com.uchicom.util.ThrowingConsumer;
+import dagger.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.inject.Inject;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -35,6 +36,10 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class Main {
 
+  @Component()
+  interface MainComponent {
+    Main main();
+  }
   /** コマンドプロンプトのデフォルトポート */
   public static final int DEFAULT_PORT = 8124;
 
@@ -52,34 +57,31 @@ public class Main {
    */
   public static void main(String[] args) {
     Parameter parameter = new Parameter(args);
-    Main plate = null;
+    var main = DaggerMain_MainComponent.create().main();
 
+    if (parameter.is("host")) {
+      main.address = parameter.get("host");
+    }
     if (parameter.is("port")) {
-      if (parameter.is("host")) {
-        plate = new Main(parameter.get("host"), parameter.getInt("port"));
-      } else {
-        plate = new Main(parameter.getInt("port"));
-      }
-    } else {
-      plate = new Main();
+      main.port = parameter.getInt("port");
     }
     if (parameter.is("file")) {
       // 設定ファイルロード処理
-      plate.load(parameter.getFile("file"));
+      main.load(parameter.getFile("file"));
     }
 
-    Runtime.getRuntime().addShutdownHook(new ShutdownHook(plate));
-    plate.execute();
+    Runtime.getRuntime().addShutdownHook(new ShutdownHook(main));
+    main.execute();
   }
 
   /** スレッドプール */
-  ExecutorService exec;
+  ExecutorService exec = Executors.newFixedThreadPool(DEFAULT_POOL_SIZE);
 
   /** コンソール待ちうけアドレス */
-  private String address;
+  private String address = DEFAULT_ADDRESS;
 
   /** ポート */
-  private int port;
+  private int port = DEFAULT_PORT;
 
   /** キー情報保持マップ */
   private Map<String, Porter> portMap = new HashMap<String, Porter>();
@@ -91,7 +93,7 @@ public class Main {
 
   PlateConfig config;
 
-  ScheduleFactory scheduleFactory = new ScheduleFactory(new CronParser());
+  private final ScheduleFactory scheduleFactory;
 
   /**
    * userを取得します。
@@ -133,31 +135,9 @@ public class Main {
   }
 
   /** 引数なしのコンストラクタ。 ポートはデフォルトポートで起動する。 */
-  public Main() {
-    this(DEFAULT_PORT);
-  }
-
-  /**
-   * スレッドプールは適宜拡張されたり減ったりする。 呼ばれていない間にメモリが使えなくなる可能性があるので、 使用頻度が少ない場合はメモリを使用しない。
-   *
-   * @param port
-   */
-  private Main(int port) {
-    this(port, DEFAULT_POOL_SIZE);
-  }
-
-  private Main(String address, int port) {
-    this(address, port, DEFAULT_POOL_SIZE);
-  }
-
-  private Main(int port, int pool) {
-    this(DEFAULT_ADDRESS, port, pool);
-  }
-
-  private Main(String address, int port, int pool) {
-    this.address = address;
-    this.port = port;
-    exec = Executors.newFixedThreadPool(pool);
+  @Inject
+  public Main(ScheduleFactory scheduleFactory) {
+    this.scheduleFactory = scheduleFactory;
   }
 
   /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
