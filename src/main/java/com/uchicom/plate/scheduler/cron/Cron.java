@@ -75,24 +75,30 @@ public class Cron {
   public void setScheduledTriggerIndex(LocalDateTime now) {
     int nowTrigger =
         createTrigger(now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute());
-    scheduledTriggerIndex = getIndexByNibun(nowTrigger, 0, triggers.length);
-    if (scheduledTriggerIndex == triggers.length - 1) {
+    int nibun = getIndexByNibun(nowTrigger, 0, triggers.length);
+    if (nibun == -1) {
       targetYear = now.getYear() - 1;
+      scheduledTriggerIndex = triggers.length - 1;
     } else {
       targetYear = now.getYear();
+      scheduledTriggerIndex = nibun;
     }
   }
 
+  /**
+   * startよりも小さい場合は-1を返却する.
+   *
+   * @param now
+   * @param start
+   * @param length
+   * @return
+   */
   int getIndexByNibun(int now, int start, int length) {
     if (length == 1) {
       if (triggers[start] < now) {
         return start;
       }
-      if (start == 0) {
-        return triggers.length - 1;
-      } else {
-        return start - 1;
-      }
+      return start - 1;
     }
     int index = start + length / 2;
     if (triggers[index] == now) {

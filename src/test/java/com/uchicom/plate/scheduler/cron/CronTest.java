@@ -3,12 +3,16 @@ package com.uchicom.plate.scheduler.cron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 
 public class CronTest {
+
   @Test
   public void parse() {
     Cron cron = new Cron();
@@ -56,6 +60,27 @@ public class CronTest {
     assertEquals(11020304, actual);
   }
 
+  @Test
+  public void setScheduledTriggerIndex() {
+    // mock
+    var cron = spy(new Cron("0", "0", "1", "8", "*"));
+    doReturn(0).when(cron).createTrigger(anyInt(), anyInt(), anyInt(), anyInt());
+    doReturn(0).doReturn(-1).when(cron).getIndexByNibun(anyInt(), anyInt(), anyInt());
+    cron.triggers = new int[] {100, 200};
+
+    // test
+    cron.setScheduledTriggerIndex(LocalDateTime.of(2023, 7, 3, 0, 0, 0));
+
+    // assert
+    assertThat(cron.targetYear).isEqualTo(2023);
+
+    // twst
+    cron.setScheduledTriggerIndex(LocalDateTime.of(2023, 7, 3, 0, 0, 0));
+
+    // assert
+    assertThat(cron.targetYear).isEqualTo(2022);
+  }
+
   public void initTriggers() {
     Cron cron = new Cron();
     cron.initTriggers("0", "9", "*", "*", "*");
@@ -68,8 +93,8 @@ public class CronTest {
   public void getIndexByNibun() {
     Cron cron = new Cron();
     cron.initTriggers("0", "9", "*", "*", "*");
-    assertThat(cron.getIndexByNibun(1010800, 0, cron.triggers.length)).isEqualTo(12 * 31 - 1);
-    assertThat(cron.getIndexByNibun(1010900, 0, cron.triggers.length)).isEqualTo(12 * 31 - 1);
+    assertThat(cron.getIndexByNibun(1010800, 0, cron.triggers.length)).isEqualTo(-1);
+    assertThat(cron.getIndexByNibun(1010900, 0, cron.triggers.length)).isEqualTo(-1);
     assertThat(cron.getIndexByNibun(1011000, 0, cron.triggers.length)).isEqualTo(0);
     assertThat(cron.getIndexByNibun(1021000, 0, cron.triggers.length)).isEqualTo(1);
     assertThat(cron.getIndexByNibun(12310800, 0, cron.triggers.length)).isEqualTo(12 * 31 - 2);
@@ -132,10 +157,64 @@ public class CronTest {
     cron.setScheduledTriggerIndex(now);
 
     assertEquals(1, cron.triggers.length);
+    assertEquals(2021, cron.targetYear);
+    assertEquals(0, cron.scheduledTriggerIndex);
     assertEquals(2140000, cron.triggers[0]);
     assertThat(cron.nextDateTime()).isEqualTo(now);
     assertThat(cron.nextDateTime()).isEqualTo(nextYear);
     assertThat(cron.nextDateTime()).isEqualTo(yearAfterNext);
+  }
+
+  @SuppressWarnings("ReturnValueIgnored")
+  @Test
+  public void nextDateTime1() {
+    LocalDateTime now = LocalDateTime.of(2022, 02, 14, 0, 0, 0);
+    LocalDateTime nextYear = now.plusYears(1);
+    LocalDateTime yearAfterNext = nextYear.plusYears(1);
+    Cron cron = new Cron("0", "0", "14", "2", "*");
+    cron.setScheduledTriggerIndex(LocalDateTime.of(2022, 02, 14, 0, 1, 0));
+
+    assertEquals(1, cron.triggers.length);
+    assertEquals(2022, cron.targetYear);
+    assertEquals(0, cron.scheduledTriggerIndex);
+    assertEquals(2140000, cron.triggers[0]);
+    assertThat(cron.nextDateTime()).isEqualTo(nextYear);
+    assertThat(cron.nextDateTime()).isEqualTo(yearAfterNext);
+  }
+
+  @SuppressWarnings("ReturnValueIgnored")
+  @Test
+  public void nextDateTime2() {
+    LocalDateTime now = LocalDateTime.of(2023, 02, 14, 0, 0, 0);
+    LocalDateTime now2 = LocalDateTime.of(2023, 06, 14, 0, 0, 0);
+    LocalDateTime nextYear = now.plusYears(1);
+    Cron cron = new Cron("0", "0", "14", "2,6", "*");
+    cron.setScheduledTriggerIndex(now);
+
+    assertEquals(2, cron.triggers.length);
+    assertEquals(2022, cron.targetYear);
+    assertEquals(1, cron.scheduledTriggerIndex);
+    assertEquals(2140000, cron.triggers[0]);
+    assertThat(cron.nextDateTime()).isEqualTo(now);
+    assertThat(cron.nextDateTime()).isEqualTo(now2);
+    assertThat(cron.nextDateTime()).isEqualTo(nextYear);
+  }
+
+  @SuppressWarnings("ReturnValueIgnored")
+  @Test
+  public void nextDateTime3() {
+    LocalDateTime now = LocalDateTime.of(2023, 02, 14, 0, 1, 0);
+    LocalDateTime now2 = LocalDateTime.of(2023, 06, 14, 0, 0, 0);
+    Cron cron = new Cron("0", "0", "14", "2,6", "*");
+    cron.setScheduledTriggerIndex(now);
+
+    assertEquals(2, cron.triggers.length);
+    assertEquals(2023, cron.targetYear);
+    assertEquals(0, cron.scheduledTriggerIndex);
+    assertEquals(2140000, cron.triggers[0]);
+    assertThat(cron.nextDateTime()).isEqualTo(now2);
+    assertThat(cron.nextDateTime()).isEqualTo(LocalDateTime.of(2024, 02, 14, 0, 0, 0));
+    assertThat(cron.nextDateTime()).isEqualTo(now2.plusYears(1));
   }
 
   @SuppressWarnings("ReturnValueIgnored")
@@ -204,7 +283,4 @@ public class CronTest {
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 19))).isTrue(); // Sat
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 20))).isTrue(); // Sun
   }
-
-  @Test
-  public void setScheduledTriggerIndex() {}
 }
