@@ -21,6 +21,7 @@ public class PurgeCmd extends AbstractCmd {
   public PurgeCmd(Commander broker) {
     super(CMD, broker);
   }
+
   /* (non-Javadoc)
    * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.CmdSocketHandler, java.lang.String[])
    */

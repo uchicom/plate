@@ -25,6 +25,7 @@ public class Cron {
   int targetYear;
   int[] triggers;
   int scheduledTriggerIndex = -1;
+
   // strategyを用意して検索する
 
   public Cron() {}

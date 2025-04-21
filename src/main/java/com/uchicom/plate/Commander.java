@@ -61,11 +61,13 @@ public class Commander implements Runnable {
 
   /** 文字列分割 */
   public static final String SPRIT_CHAR = ":";
+
   /** 文字列分割 */
   public static final String CMD_SPRIT_CHAR = " +";
 
   /** 生死フラグ */
   private static boolean alive = true;
+
   /** シングルトン用のコマンダー */
   private static Commander commander = null;
 
@@ -78,6 +80,7 @@ public class Commander implements Runnable {
   private List<AbstractCmd> cmdList = null;
 
   private Map<String, AbstractCmd> cmdMap = new HashMap<String, AbstractCmd>();
+
   /**
    * cmdMapを取得します。
    *
@@ -195,6 +198,7 @@ public class Commander implements Runnable {
     }
     writer.write(CMD_PROMPT);
   }
+
   /**
    * plateを取得します。
    *

@@ -42,6 +42,7 @@ public class CUserCmd extends AbstractCmd {
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     return params.length == 1;
   }
+
   /* (non-Javadoc)
    * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.CmdSocketHandler, java.lang.String[])
    */

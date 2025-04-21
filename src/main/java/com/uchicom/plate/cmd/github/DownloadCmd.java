@@ -16,6 +16,7 @@ import com.uchicom.plate.service.GithubService;
 public class DownloadCmd extends AbstractCmd {
 
   private final GithubService githubService;
+
   /** コマンド文字列 */
   public static final String CMD = "download";
 
