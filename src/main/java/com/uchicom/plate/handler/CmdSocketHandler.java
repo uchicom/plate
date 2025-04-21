@@ -24,8 +24,10 @@ public class CmdSocketHandler implements Handler {
   private final ByteBuffer cmd = ByteBuffer.allocate(256);
   StringBuffer cmdBuff = new StringBuffer(256);
   StringBuffer resBuff = new StringBuffer(256);
+
   /** ユーザーが入力したユーザー名 */
   private String user = null;
+
   /** ユーザーが入力したパスワード */
   private String pass = null;
 
@@ -248,6 +250,7 @@ public class CmdSocketHandler implements Handler {
     }
     cmdBuff.append(">");
   }
+
   //    /**
   //     *
   //     * @param writer

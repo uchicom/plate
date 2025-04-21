@@ -4,13 +4,13 @@ package com.uchicom.plate;
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.exception.CmdException;
+import com.uchicom.plate.factory.di.DIFactory;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
 import com.uchicom.util.ThrowingConsumer;
-import dagger.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.inject.Inject;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -36,10 +35,6 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class Main {
 
-  @Component()
-  interface MainComponent {
-    Main main();
-  }
   /** コマンドプロンプトのデフォルトポート */
   public static final int DEFAULT_PORT = 8124;
 
@@ -57,7 +52,7 @@ public class Main {
    */
   public static void main(String[] args) {
     Parameter parameter = new Parameter(args);
-    var main = DaggerMain_MainComponent.create().main();
+    var main = DIFactory.main();
 
     if (parameter.is("host")) {
       main.address = parameter.get("host");
@@ -135,7 +130,6 @@ public class Main {
   }
 
   /** 引数なしのコンストラクタ。 ポートはデフォルトポートで起動する。 */
-  @Inject
   public Main(ScheduleFactory scheduleFactory) {
     this.scheduleFactory = scheduleFactory;
   }
@@ -347,6 +341,7 @@ public class Main {
       throw new RuntimeException(e);
     }
   }
+
   /**
    * 認証なしで設定ファイルをロードする。
    *
@@ -482,6 +477,7 @@ public class Main {
   public void save(String user, String pass) throws CmdException {
     save(loadFile, user, pass);
   }
+
   /**
    * 設定を保存する。
    *

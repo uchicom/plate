@@ -4,13 +4,11 @@ package com.uchicom.plate.scheduler;
 import com.uchicom.plate.scheduler.cron.Cron;
 import com.uchicom.plate.scheduler.cron.CronParser;
 import com.uchicom.plate.service.DateTimeService;
-import javax.inject.Inject;
 
 public class ScheduleFactory {
   private final DateTimeService dateTimeService;
   private final CronParser cronParser;
 
-  @Inject
   public ScheduleFactory(DateTimeService dateTimeService, CronParser cronParser) {
     this.dateTimeService = dateTimeService;
     this.cronParser = cronParser;

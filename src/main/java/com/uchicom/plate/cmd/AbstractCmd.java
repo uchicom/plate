@@ -16,6 +16,7 @@ public abstract class AbstractCmd {
   protected Commander broker;
 
   protected String name;
+
   /**
    * コマンダーを保持するコンストラクタ。
    *

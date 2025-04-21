@@ -15,6 +15,7 @@ import com.uchicom.plate.service.DeployService;
 public class LsdlCmd extends AbstractCmd {
 
   private final DeployService deployService;
+
   /** コマンド文字列 */
   public static final String CMD = "lsdl";
 

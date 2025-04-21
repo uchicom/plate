@@ -16,6 +16,7 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   /** */
   private KeyInfo startingKey;
+
   /** */
   private String[] params;
 
@@ -42,6 +43,7 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   /** */
   private long start;
+
   /** */
   private long end;
 
@@ -49,6 +51,7 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   private boolean finish;
   private boolean started;
+
   /** */
   public static final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
 
@@ -179,6 +182,7 @@ public class Starter implements ThrowRunnable<Throwable> {
       end = System.currentTimeMillis();
     }
   }
+
   /**
    * 実行プログラムを終了する 実行クラスのshutdownメソッドを呼び出す
    *

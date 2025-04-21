@@ -49,6 +49,7 @@ public class GithubService {
       throw new ServiceException(e);
     }
   }
+
   /** JARダウンロード. */
   List<Path> downloadAssets(String token, File dir, String repos, String filter, String tag)
       throws IOException, InterruptedException {
