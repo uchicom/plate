@@ -56,7 +56,7 @@ jobs:
         asset_name: plate-jar-with-dependencies.jar
         asset_content_type: application/java-archive
     - name: Upload jacoco result
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jacoco
         path: target/site/jacoco
