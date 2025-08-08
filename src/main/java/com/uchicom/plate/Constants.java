@@ -2,6 +2,8 @@
 package com.uchicom.plate;
 
 /**
+ * 定数クラス.
+ *
  * @author uchicom: Shigeki Uchiyama
  */
 public class Constants {

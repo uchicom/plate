@@ -7,6 +7,8 @@ import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
+ * キーを編集するコマンド。
+ *
  * @author Uchiyama Shigeki
  */
 public class EditCmd extends AbstractCmd {
@@ -14,18 +16,10 @@ public class EditCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "edit";
 
-  /**
-   * @param plate
-   */
   public EditCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -35,23 +29,11 @@ public class EditCmd extends AbstractCmd {
         + "  ex)edit test com.uchicom.Test2\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     return params.length >= 1 && params.length <= 3 && handler.getCurrentPort() != null;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     if (params.length == 1) {

@@ -7,7 +7,6 @@ import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.factory.di.DIFactory;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
-import com.uchicom.plate.util.Base64;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
 import com.uchicom.util.ThrowingConsumer;
@@ -18,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,8 +47,6 @@ public class Main {
   /**
    * コマンド引数を使用してサーバーを起動する。 ポート番号を指定してコマンドを受け付けるポート番号を指定する。
    * 任意でデフォルトの設定ファイル名を指定する。指定されている場合は設定ファイルをロードする。
-   *
-   * @param args
    */
   public static void main(String[] args) {
     Parameter parameter = new Parameter(args);
@@ -99,11 +97,6 @@ public class Main {
     return user;
   }
 
-  /**
-   * userを設定します。
-   *
-   * @param user
-   */
   public void setUser(String user) {
     this.user = user;
   }
@@ -111,20 +104,12 @@ public class Main {
   /** パスワード */
   private String cryptPass;
 
-  /**
-   * cryptPassを取得します。
-   *
-   * @return cryptPass
-   */
+  /** cryptPassを取得します。 */
   public String getCryptPass() {
     return cryptPass;
   }
 
-  /**
-   * cryptPassを設定します。
-   *
-   * @param cryptPass
-   */
+  /** cryptPassを設定します。 */
   public void setCryptPass(String cryptPass) {
     this.cryptPass = cryptPass;
   }
@@ -140,11 +125,7 @@ public class Main {
     new Thread(commander).start();
   }
 
-  /**
-   * スタータークラスをスレッドプールを利用して起動する。
-   *
-   * @param starter
-   */
+  /** スタータークラスをスレッドプールを利用して起動する。 */
   public void start(Starter starter) {
     // スターターがスタートしているのかのフラグ
     starter.setStarted(true);
@@ -158,25 +139,12 @@ public class Main {
         });
   }
 
-  /**
-   * キーを追加する。
-   *
-   * @param key
-   * @param className
-   * @param port
-   */
+  /** キーを追加する。 */
   public void addKey(String key, String className, String port) {
     addKey(key, className, "main", port);
   }
 
-  /**
-   * キーを追加する。
-   *
-   * @param key
-   * @param className
-   * @param methodName
-   * @param port
-   */
+  /** キーを追加する。 */
   public void addKey(String key, String className, String methodName, String port) {
     KeyInfo keyInfo = new KeyInfo(key, className, methodName);
     if (portMap.containsKey(port)) {
@@ -190,14 +158,7 @@ public class Main {
     }
   }
 
-  /**
-   * キーを呼び出す。
-   *
-   * @param port
-   * @param key
-   * @param params
-   * @throws CmdException
-   */
+  /** キーを呼び出す。 */
   public void callKey(String port, String key, String[] params) throws CmdException {
     checkPort(port);
     keyAction(
@@ -209,12 +170,6 @@ public class Main {
         });
   }
 
-  /**
-   * @param port
-   * @param key
-   * @param params
-   * @throws CmdException
-   */
   public void shutdownKey(String port, String key, String[] params) throws CmdException {
     checkPort(port);
 
@@ -270,62 +225,32 @@ public class Main {
     keyAction(key, port, startingKey -> startingKey.setKey(newKey));
   }
 
-  /**
-   * キーを除去する。
-   *
-   * @param key
-   * @param port
-   * @throws CmdException
-   */
+  /** キーを除去する。 */
   public void removeKey(String key, String port) throws CmdException {
     checkPort(port);
     List<KeyInfo> list = portMap.get(port).getList();
     list.remove(new KeyInfo(key));
   }
 
-  /**
-   * キーを使用可にする。
-   *
-   * @param key
-   * @param port
-   * @throws CmdException
-   */
+  /** キーを使用可にする。 */
   public void enableKey(String key, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_ENABLE));
   }
 
-  /**
-   * キーを使用不可にする。
-   *
-   * @param key
-   * @param port
-   * @throws CmdException
-   */
+  /** キーを使用不可にする。 */
   public void disableKey(String key, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_DISABLE));
   }
 
-  /**
-   * キーを自動リカバリーにする。
-   *
-   * @param key
-   * @param port
-   * @throws CmdException
-   */
+  /** キーを自動リカバリーにする。 */
   public void autoKey(String key, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.AUTO));
   }
 
-  /**
-   * キーを自動リカバリーにする。
-   *
-   * @param key
-   * @param port
-   * @throws CmdException
-   */
+  /** キーを自動リカバリーにする。 */
   public void manualKey(String key, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.MANUAL));
@@ -342,11 +267,7 @@ public class Main {
     }
   }
 
-  /**
-   * 認証なしで設定ファイルをロードする。
-   *
-   * @param fileName
-   */
+  /** 認証なしで設定ファイルをロードする。 */
   public void load(File file) {
     loadFile = file;
     config = loadConfig(file);
@@ -458,15 +379,10 @@ public class Main {
     }
   }
 
-  /**
-   * 認証ありで設定を読み込む。
-   *
-   * @param fileName
-   * @throws CmdException
-   */
+  /** 認証ありで設定を読み込む。 */
   public void load(String fileName, String user, String pass) throws CmdException {
     var config = loadConfig(loadFile);
-    var cryptPass = Base64.encode(Crypt.encrypt3(user, pass));
+    var cryptPass = Base64.getEncoder().encodeToString(Crypt.encrypt3(user, pass));
     if (!config.user.equals(user) || !config.hash.equals(cryptPass)) {
       throw new CmdException("認証エラー");
     }
@@ -478,27 +394,17 @@ public class Main {
     save(loadFile, user, pass);
   }
 
-  /**
-   * 設定を保存する。
-   *
-   * @param fileName
-   * @throws CmdException
-   */
+  /** 設定を保存する。 */
   public void save(File file, String user, String pass) throws CmdException {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
       config.user = user;
-      config.hash = Base64.encode(Crypt.encrypt3(user, pass));
+      config.hash = Base64.getEncoder().encodeToString(Crypt.encrypt3(user, pass));
       new Yaml().dump(config, writer);
     } catch (IOException e) {
       throw new CmdException(e);
     }
   }
 
-  /**
-   * portMapを取得します。
-   *
-   * @return portMap
-   */
   public Map<String, Porter> getPortMap() {
     return portMap;
   }
@@ -531,86 +437,30 @@ public class Main {
   /**
    * 指定のポート情報が存在するかをチェックします
    *
-   * @param port
+   * @param port ポート情報
    * @return 指定のポート情報がない場合はfalse,ある場合はtrue
    */
   public boolean exists(String port) {
     return List.of("service", "batch").contains(port);
   }
 
-  /**
-   * キーのクラスパスを追加する。
-   *
-   * @param key
-   * @param classPath
-   * @param port
-   */
+  /** キーのクラスパスを追加する。 */
   public void addCp(String key, CpInfo cpInfo, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.addCp(cpInfo));
   }
 
-  /**
-   * @param key
-   * @param protocol
-   * @param host
-   * @param file
-   * @param port
-   * @throws CmdException
-   */
-  public void addCp(String key, String protocol, String host, String file, String port)
-      throws CmdException {
-    checkPort(port);
-    keyAction(
-        key,
-        port,
-        startingKey -> {
-          try {
-            startingKey.addCp(protocol, host, file);
-          } catch (Exception e) {
-            throw new CmdException(e);
-          }
-        });
-  }
-
-  /**
-   * キーのクラスパスを除去する。
-   *
-   * @param key
-   * @param iCp
-   * @param port
-   * @throws CmdException
-   */
+  /** キーのクラスパスを除去する。 */
   public void removeCp(String key, String iCp, String port) throws CmdException {
     checkPort(port);
     keyAction(key, port, startingKey -> startingKey.removeCp(iCp));
   }
 
-  /**
-   * ポートのクラスパスを追加する。
-   *
-   * @param classPath
-   * @param port
-   * @throws CmdException
-   */
   public void addPortCp(CpInfo cpInfo, String port) throws CmdException {
     checkPort(port);
     portMap.get(port).addCp(cpInfo);
   }
 
-  public void addPortCp(String protocol, String host, String file, String port)
-      throws IOException, CmdException {
-    checkPort(port);
-    portMap.get(port).addCp(protocol, host, file);
-  }
-
-  /**
-   * ポートのクラスパスを除去する。
-   *
-   * @param iCp
-   * @param port
-   * @throws CmdException
-   */
   public void removePortCp(String iCp, String port) throws CmdException {
     checkPort(port);
     portMap.get(port).removeCp(iCp);

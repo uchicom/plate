@@ -15,18 +15,10 @@ public class AddCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "add";
 
-  /**
-   * @param broker
-   */
   public AddCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.Cmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -36,12 +28,6 @@ public class AddCmd extends AbstractCmd {
         + "  ex)add test com.uchicom.Test start\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if ((params.length == 2 || params.length == 3) && handler.getCurrentPort() != null) {
@@ -52,12 +38,6 @@ public class AddCmd extends AbstractCmd {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) {
     if (params.length == 2) {

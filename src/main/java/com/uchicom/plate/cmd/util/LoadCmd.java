@@ -16,18 +16,10 @@ public class LoadCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "load";
 
-  /**
-   * @param plate
-   */
   public LoadCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -37,23 +29,11 @@ public class LoadCmd extends AbstractCmd {
         + "  ex)load test.sv\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     return params.length == 1;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     broker.getMain().load(params[0], handler.getUser(), handler.getPass());

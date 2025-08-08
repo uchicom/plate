@@ -6,7 +6,6 @@ import com.uchicom.plate.CpInfo;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
-import java.net.MalformedURLException;
 
 /**
  * ポートにクラスパスを追加するコマンド。
@@ -18,18 +17,10 @@ public class AddPortCpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "addportcp";
 
-  /**
-   * @param broker
-   */
   public AddPortCpCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -39,12 +30,6 @@ public class AddPortCpCmd extends AbstractCmd {
         + "  ex)addportcp ./test.jar 8080\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if ((params.length == 1) && handler.getCurrentPort() != null) {
@@ -56,12 +41,6 @@ public class AddPortCpCmd extends AbstractCmd {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
 
@@ -69,16 +48,7 @@ public class AddPortCpCmd extends AbstractCmd {
     if (params.length == 2 || params.length == 4) {
       port = params[params.length - 1];
     }
-    CpInfo cpInfo = null;
-    try {
-      if (params.length < 3) {
-        cpInfo = new CpInfo(params[0]);
-      } else {
-        cpInfo = new CpInfo(params[0], params[1], params[2]);
-      }
-    } catch (MalformedURLException e) {
-      throw new CmdException(e);
-    }
+    CpInfo cpInfo = new CpInfo(params[0]);
     var portMap = broker.getMain().getPortMap();
     if (!portMap.containsKey(port)) {
       throw new CmdException("ポート番号は存在しません." + port);

@@ -19,31 +19,16 @@ public class LsdlCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "lsdl";
 
-  /**
-   * @param plate
-   */
   public LsdlCmd(Commander broker, DeployService deployService) {
     super(CMD, broker);
     this.deployService = deployService;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     return params.length == 1;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
@@ -54,11 +39,6 @@ public class LsdlCmd extends AbstractCmd {
     return deployService.lsdl(config.deploy.get(key));
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "

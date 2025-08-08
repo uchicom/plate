@@ -7,23 +7,18 @@ import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
+ * キーを手動で設定するコマンド
+ *
  * @author Uchiyama Shigeki
  */
 public class ManualCmd extends AbstractCmd {
 
   public static final String CMD = "manual";
 
-  /**
-   * @param name
-   * @param broker
-   */
   public ManualCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /* (non-Javadoc)
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     String port = handler.getCurrentPort();
@@ -34,9 +29,6 @@ public class ManualCmd extends AbstractCmd {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -46,12 +38,6 @@ public class ManualCmd extends AbstractCmd {
         + "  ex)manual test\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if (params.length == 1 && handler.getCurrentPort() != null) {

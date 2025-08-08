@@ -86,14 +86,7 @@ public class Cron {
     }
   }
 
-  /**
-   * startよりも小さい場合は-1を返却する.
-   *
-   * @param now
-   * @param start
-   * @param length
-   * @return
-   */
+  /** startよりも小さい場合は-1を返却する. */
   int getIndexByNibun(int now, int start, int length) {
     if (length == 1) {
       if (triggers[start] < now) {

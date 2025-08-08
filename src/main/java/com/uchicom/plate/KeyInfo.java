@@ -3,7 +3,6 @@ package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.scheduler.Schedule;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -29,20 +28,10 @@ public class KeyInfo {
 
   private Schedule schedule;
 
-  /**
-   * methodNameを取得します。
-   *
-   * @return methodName
-   */
   public String getMethodName() {
     return methodName;
   }
 
-  /**
-   * methodNameを設定します。
-   *
-   * @param methodName
-   */
   public void setMethodName(String methodName) {
     this.methodName = methodName;
   }
@@ -50,20 +39,10 @@ public class KeyInfo {
   /** ポート */
   private Porter porter;
 
-  /**
-   * porterを取得します。
-   *
-   * @return porter
-   */
   public Porter getPorter() {
     return porter;
   }
 
-  /**
-   * porterを設定します。
-   *
-   * @param porter
-   */
   public void setPorter(Porter porter) {
     this.porter = porter;
   }
@@ -82,40 +61,20 @@ public class KeyInfo {
 
   private URLClassLoader classLoader = null;
 
-  /**
-   * classLoaderを取得します。
-   *
-   * @return classLoader
-   */
   public URLClassLoader getClassLoader() {
     return classLoader;
   }
 
-  /**
-   * classLoaderを設定します。
-   *
-   * @param classLoader
-   */
   public void setClassLoader(URLClassLoader classLoader) {
     this.classLoader = classLoader;
   }
 
   private List<Starter> starterList = new ArrayList<Starter>();
 
-  /**
-   * starterListを取得します。
-   *
-   * @return starterList
-   */
   public List<Starter> getStarterList() {
     return starterList;
   }
 
-  /**
-   * starterListを設定します。
-   *
-   * @param starterList
-   */
   public void setStarterList(List<Starter> starterList) {
     this.starterList = starterList;
   }
@@ -134,67 +93,39 @@ public class KeyInfo {
     this.methodName = methodName;
   }
 
-  /**
-   * keyを取得します。
-   *
-   * @return key
-   */
   public String getKey() {
     return key;
   }
 
-  /**
-   * keyを設定します。
-   *
-   * @param key
-   */
   public void setKey(String key) {
     this.key = key;
   }
 
-  /**
-   * classNameを取得します。
-   *
-   * @return className
-   */
   public String getClassName() {
     return className;
   }
 
-  /**
-   * classNameを設定します。
-   *
-   * @param className
-   */
   public void setClassName(String className) {
     this.className = className;
   }
 
+  @Override
   public boolean equals(Object obj) {
-    if (obj instanceof KeyInfo) {
-      return obj != null && this.key != null && this.key.equals(((KeyInfo) obj).key);
+    if (obj instanceof KeyInfo keyInfo) {
+      return keyInfo != null && this.key != null && this.key.equals(keyInfo.key);
     }
     return false;
   }
 
+  @Override
   public int hashCode() {
     return key.hashCode();
   }
 
-  /**
-   * statusを取得します。
-   *
-   * @return status
-   */
   public int getStatus() {
     return status;
   }
 
-  /**
-   * statusを設定します。
-   *
-   * @param status
-   */
   public void setStatus(int status) {
     this.status = status;
   }
@@ -209,26 +140,10 @@ public class KeyInfo {
     return starter;
   }
 
-  /**
-   * @param classPath
-   */
   public void addCp(CpInfo cpInfo) {
     cpList.add(cpInfo);
   }
 
-  /**
-   * @param protocol
-   * @param host
-   * @param file
-   * @throws MalformedURLException
-   */
-  public void addCp(String protocol, String host, String file) throws MalformedURLException {
-    cpList.add(new CpInfo(protocol, host, file));
-  }
-
-  /**
-   * @param classPath
-   */
   public void removeCp(String iCp) {
     for (CpInfo cpInfo : cpList) {
       if (iCp.equals(cpInfo.getUrl().getPath())) {
@@ -238,20 +153,10 @@ public class KeyInfo {
     }
   }
 
-  /**
-   * cpListを取得します。
-   *
-   * @return cpList
-   */
   public List<CpInfo> getCpList() {
     return cpList;
   }
 
-  /**
-   * cpListを設定します。
-   *
-   * @param cpList
-   */
   public void setCpList(List<CpInfo> cpList) {
     this.cpList = cpList;
   }
@@ -284,8 +189,9 @@ public class KeyInfo {
     this.schedule = schedule;
   }
 
+  @Override
   public String toString() {
-    StringBuffer strBuff = new StringBuffer();
+    StringBuilder strBuff = new StringBuilder();
     strBuff.append(' ');
     strBuff.append(key);
     strBuff.append(' ');

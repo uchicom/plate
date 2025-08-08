@@ -90,11 +90,6 @@ public class Commander implements Runnable {
     return cmdMap;
   }
 
-  /**
-   * cmdMapを設定します。
-   *
-   * @param cmdMap
-   */
   public void setCmdMap(Map<String, AbstractCmd> cmdMap) {
     this.cmdMap = cmdMap;
   }
@@ -151,6 +146,7 @@ public class Commander implements Runnable {
   }
 
   /** スレッドとして起動し、 バッチ起動コマンド入力をひたすら待ち続ける。 */
+  @Override
   public void run() {
     // サーバーソケットを作成する
     try (ServerSocketChannel serverChannel = ServerSocketChannel.open(); ) {
@@ -185,10 +181,6 @@ public class Commander implements Runnable {
     }
   }
 
-  /**
-   * @param writer
-   * @throws IOException
-   */
   public void writeCmdLine(OutputStreamWriter writer) throws IOException {
     writer.write("\r");
     writer.write(CMD_SET);
@@ -199,38 +191,18 @@ public class Commander implements Runnable {
     writer.write(CMD_PROMPT);
   }
 
-  /**
-   * plateを取得します。
-   *
-   * @return plate
-   */
   public Main getMain() {
     return plate;
   }
 
-  /**
-   * plateを設定します。
-   *
-   * @param plate
-   */
   public void setMain(Main plate) {
     this.plate = plate;
   }
 
-  /**
-   * cmdListを取得します。
-   *
-   * @return cmdList
-   */
   public List<AbstractCmd> getCmdList() {
     return cmdList;
   }
 
-  /**
-   * cmdListを設定します。
-   *
-   * @param cmdList
-   */
   public void setCmdList(List<AbstractCmd> cmdList) {
     this.cmdList = cmdList;
   }

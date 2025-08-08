@@ -5,13 +5,11 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 /**
+ * ハンドラインターフェース.
+ *
  * @author Uchiyama Shigeki
  */
 public interface Handler {
 
-  /**
-   * @param key
-   * @throws IOException
-   */
   public void handle(SelectionKey key) throws IOException;
 }

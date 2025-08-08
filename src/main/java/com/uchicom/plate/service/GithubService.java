@@ -28,14 +28,11 @@ public class GithubService {
       var list = new ArrayList<Path>();
       for (var downloadFile : dto.downloadFiles) {
         switch (downloadFile.kind) {
-          case ASSETS:
-            list.addAll(downloadAssets(dto.token, dir, dto.repos, downloadFile.filter, tag));
-            break;
-          case TARBALL:
-          case ZIPBALL:
-            list.add(downloadFile(dto.token, dir, dto.repos, downloadFile.kind, tag));
-          default:
-            // fall through
+          case ASSETS -> list.addAll(
+              downloadAssets(dto.token, dir, dto.repos, downloadFile.filter, tag));
+          case TARBALL, ZIPBALL -> list.add(
+              downloadFile(dto.token, dir, dto.repos, downloadFile.kind, tag));
+          default -> {}
         }
       }
       StringBuilder builder = new StringBuilder(1024);
@@ -70,17 +67,6 @@ public class GithubService {
     return list;
   }
 
-  /**
-   * ファイルダウンロード.
-   *
-   * @param token
-   * @param dir
-   * @param repos
-   * @param downloadKind
-   * @param tag
-   * @throws IOException
-   * @throws InterruptedException
-   */
   Path downloadFile(String token, File dir, String repos, DownloadFileKind downloadKind, String tag)
       throws IOException, InterruptedException {
     return dowload(
