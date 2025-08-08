@@ -16,18 +16,10 @@ public class RemoveCpCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "removecp";
 
-  /**
-   * @param broker
-   */
   public RemoveCpCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -37,12 +29,6 @@ public class RemoveCpCmd extends AbstractCmd {
         + "  ex)removecp test ./test.jar\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     String port = handler.getCurrentPort();
@@ -53,12 +39,6 @@ public class RemoveCpCmd extends AbstractCmd {
     return null;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if (params.length == 2 && handler.getCurrentPort() != null) {

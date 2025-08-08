@@ -56,14 +56,7 @@ public class DeployService {
       var fromFile = createFile(dir, deployFile.from);
 
       var fileList = new ArrayList<File>();
-      if (deployFile.decompress == null) {
-        fileList.addAll(List.of(fromFile));
-      } else {
-        // 解凍
-        // Stream.of(files).forEach(file->
-        //   ); // TODO あとまわし
-        fileList.addAll(List.of(fromFile));
-      }
+      fileList.addAll(List.of(fromFile));
 
       // ファイルの配置
       var toDir = createFile(deployFile.to);

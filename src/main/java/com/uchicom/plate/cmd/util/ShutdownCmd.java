@@ -15,29 +15,15 @@ public class ShutdownCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "shutdown";
 
-  /**
-   * @param plate
-   */
   public ShutdownCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " " + CMD + ": shutdown plate server.\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) {
     broker.getMain().exit();

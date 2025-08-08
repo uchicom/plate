@@ -20,31 +20,16 @@ public class DownloadCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "download";
 
-  /**
-   * @param plate
-   */
   public DownloadCmd(Commander broker, GithubService githubService) {
     super(CMD, broker);
     this.githubService = githubService;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     return params.length == 2;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
@@ -61,11 +46,6 @@ public class DownloadCmd extends AbstractCmd {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "

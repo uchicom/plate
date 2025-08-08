@@ -6,6 +6,8 @@ import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
+ * システムプロパティを設定するコマンド.
+ *
  * @author uchicom: Shigeki Uchiyama
  */
 public class DSetCmd extends AbstractCmd {
@@ -13,19 +15,10 @@ public class DSetCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "dset";
 
-  /**
-   * @param name
-   * @param broker
-   */
   public DSetCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -35,12 +28,6 @@ public class DSetCmd extends AbstractCmd {
         + "  ex)dset test config\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if (params.length == 2) {
@@ -51,12 +38,6 @@ public class DSetCmd extends AbstractCmd {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) {
     System.setProperty(params[0], params[1]);

@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 
 /**
+ * コマンドソケットハンドラー
+ *
  * @author Uchiyama Shigeki
  */
 public class CmdSocketHandler implements Handler {
@@ -22,8 +25,8 @@ public class CmdSocketHandler implements Handler {
   //    private static final ByteBuffer CMD_PROMPT = ByteBuffer.wrap(new byte[] { '>' });
 
   private final ByteBuffer cmd = ByteBuffer.allocate(256);
-  StringBuffer cmdBuff = new StringBuffer(256);
-  StringBuffer resBuff = new StringBuffer(256);
+  StringBuilder cmdBuff = new StringBuilder(256);
+  StringBuilder resBuff = new StringBuilder(256);
 
   /** ユーザーが入力したユーザー名 */
   private String user = null;
@@ -34,9 +37,6 @@ public class CmdSocketHandler implements Handler {
   /** ソケットチャンネル */
   private SocketChannel socketChannel;
 
-  /**
-   * @param socketChannel
-   */
   public CmdSocketHandler(SocketChannel socketChannel) {
     this.socketChannel = socketChannel;
   }
@@ -48,38 +48,18 @@ public class CmdSocketHandler implements Handler {
     }
   }
 
-  /**
-   * passを取得します。
-   *
-   * @return pass
-   */
   public String getPass() {
     return pass;
   }
 
-  /**
-   * passを設定します。
-   *
-   * @param pass
-   */
   public void setPass(String pass) {
     this.pass = pass;
   }
 
-  /**
-   * userを取得します。
-   *
-   * @return user
-   */
   public String getUser() {
     return user;
   }
 
-  /**
-   * userを設定します。
-   *
-   * @param user
-   */
   public void setUser(String user) {
     this.user = user;
   }
@@ -87,20 +67,10 @@ public class CmdSocketHandler implements Handler {
   /** ユーザー名を入力しているかどうかのフラグ */
   private boolean bUser = false;
 
-  /**
-   * bUserを取得します。
-   *
-   * @return bUser
-   */
   public boolean isbUser() {
     return bUser;
   }
 
-  /**
-   * bUserを設定します。
-   *
-   * @param bUser
-   */
   public void setbUser(boolean bUser) {
     this.bUser = bUser;
   }
@@ -108,20 +78,10 @@ public class CmdSocketHandler implements Handler {
   /** パスワードを入力して認証が通ったかのフラグ */
   private boolean bPass = false;
 
-  /**
-   * bPassを取得します。
-   *
-   * @return bPass
-   */
   public boolean isbPass() {
     return bPass;
   }
 
-  /**
-   * bPassを設定します。
-   *
-   * @param bPass
-   */
   public void setbPass(boolean bPass) {
     this.bPass = bPass;
   }
@@ -129,20 +89,10 @@ public class CmdSocketHandler implements Handler {
   /** ユーザーのカレントポート */
   private String currentPort = null;
 
-  /**
-   * currentPortを取得します。
-   *
-   * @return currentPort
-   */
   public String getCurrentPort() {
     return currentPort;
   }
 
-  /**
-   * currentPortを設定します。
-   *
-   * @param currentPort
-   */
   public void setCurrentPort(String currentPort) {
     this.currentPort = currentPort;
     //        this.currentPortBuffer = ByteBuffer.wrap(currentPort.getBytes());
@@ -151,11 +101,6 @@ public class CmdSocketHandler implements Handler {
   //    /** バッファー情報のカレントポート */
   //    private ByteBuffer currentPortBuffer = null;
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.Handler#handle(java.nio.channels.SelectionKey)
-   */
   @Override
   public void handle(SelectionKey key) throws IOException {
 
@@ -167,7 +112,7 @@ public class CmdSocketHandler implements Handler {
       try {
         SocketChannel socketChannel = (SocketChannel) key.channel();
         // \r\nまで読み込み続ける
-        if (checkCmd(socketChannel, key)) {
+        if (checkCmd(socketChannel)) {
           // コマンド解析可能
           // コマンド実行
           // 読み込むデータがなくても監視は続ける。
@@ -177,7 +122,7 @@ public class CmdSocketHandler implements Handler {
           // 改行のみは次行へ
           if (cmdLine.length() > 0) {
             Map<String, AbstractCmd> cmdMap = Commander.getInstance().getCmdMap();
-            String[] cmdParams = cmdLine.split(Commander.CMD_SPRIT_CHAR);
+            String[] cmdParams = cmdLine.split(Commander.CMD_SPRIT_CHAR, 0);
             if (cmdParams.length > 0) {
               String cmdString = cmdParams[0];
               if (cmdMap.containsKey(cmdString)) {
@@ -242,7 +187,7 @@ public class CmdSocketHandler implements Handler {
     }
   }
 
-  private void writeCmdLine(StringBuffer cmdBuff) throws IOException {
+  private void writeCmdLine(StringBuilder cmdBuff) throws IOException {
     cmdBuff.append("plate");
     if (currentPort != null) {
       cmdBuff.append(":");
@@ -300,7 +245,7 @@ public class CmdSocketHandler implements Handler {
   // 実行クラスとパラメータ引数の文字列長を抽出する
   boolean escape = false;
 
-  private boolean checkCmd(SocketChannel socketChannel, SelectionKey key) throws IOException {
+  private boolean checkCmd(SocketChannel socketChannel) throws IOException {
     boolean lineEnd = false;
     int length = socketChannel.read(cmd);
     if (length == -1) {
@@ -351,14 +296,9 @@ public class CmdSocketHandler implements Handler {
     return lineEnd;
   }
 
-  /**
-   * データを書き込んで0に設定
-   *
-   * @param socketChannel
-   * @throws IOException
-   */
+  /** データを書き込んで0に設定 */
   private void writeMessage(SocketChannel socketChannel) throws IOException {
-    socketChannel.write(ByteBuffer.wrap(resBuff.toString().getBytes()));
+    socketChannel.write(ByteBuffer.wrap(resBuff.toString().getBytes(StandardCharsets.US_ASCII)));
     resBuff.setLength(0);
   }
 }

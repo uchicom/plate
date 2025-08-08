@@ -13,9 +13,6 @@ import java.nio.channels.SocketChannel;
  */
 public class CmdServerHandler implements Handler {
 
-  /* (non-Javadoc)
-   * @see com.uchicom.plate.Handler#handle(java.nio.channels.SelectionKey)
-   */
   @Override
   public void handle(SelectionKey key) throws IOException {
     if (key.isAcceptable()) {

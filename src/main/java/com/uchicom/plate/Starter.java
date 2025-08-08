@@ -1,11 +1,12 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.service.DateTimeService;
 import com.uchicom.plate.util.ThrowRunnable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 起動クラス
@@ -14,46 +15,33 @@ import java.util.Date;
  */
 public class Starter implements ThrowRunnable<Throwable> {
 
-  /** */
+  private final DateTimeService dateTimeService = new DateTimeService();
   private KeyInfo startingKey;
 
-  /** */
   private String[] params;
 
   /** 実行クラス保持用 */
   private Class<?> classObject;
 
-  /**
-   * paramsを取得します。
-   *
-   * @return params
-   */
   public String[] getParams() {
     return params;
   }
 
-  /**
-   * paramsを設定します。
-   *
-   * @param params
-   */
   public void setParams(String[] params) {
     this.params = params;
   }
 
-  /** */
-  private long start;
+  private LocalDateTime start;
 
-  /** */
-  private long end;
+  private LocalDateTime end;
 
   private long recoveryCount;
 
   private boolean finish;
   private boolean started;
 
-  /** */
-  public static final SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
+  public static final DateTimeFormatter format =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
   /** 起動元のソース */
   private StarterKind kind;
@@ -64,7 +52,6 @@ public class Starter implements ThrowRunnable<Throwable> {
     SERVICE
   }
 
-  /** */
   public boolean isAlive() {
     return started && !finish;
   }
@@ -73,11 +60,6 @@ public class Starter implements ThrowRunnable<Throwable> {
     this.started = started;
   }
 
-  /**
-   * @param startingKey
-   * @param params
-   * @param plate
-   */
   public Starter(KeyInfo startingKey, String[] params, StarterKind kind) {
     this.startingKey = startingKey;
     if (params == null) {
@@ -88,48 +70,38 @@ public class Starter implements ThrowRunnable<Throwable> {
     this.kind = kind;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Runnable#run()
-   */
   @Override
   public void run() throws Throwable {
-    if (start != 0 || !finish) {
-      start = System.currentTimeMillis();
+    if (start != null || !finish) {
+      start = dateTimeService.getLocalDateTime();
       try {
         invoke(params);
       } finally {
-        end = System.currentTimeMillis();
+        end = dateTimeService.getLocalDateTime();
       }
     }
   }
 
   /** オブジェクトの文字列表現を取得する。 */
+  @Override
   public String toString() {
-    StringBuffer strBuff = new StringBuffer(100);
+    StringBuilder strBuff = new StringBuilder(100);
     switch (kind) {
-      case CALL:
-        strBuff.append("   CALL");
-        break;
-      case BATCH:
-        strBuff.append("   BATCH");
-        break;
-      case SERVICE:
-        strBuff.append("   SERVICE");
-        break;
+      case CALL -> strBuff.append("   CALL");
+      case BATCH -> strBuff.append("   BATCH");
+      case SERVICE -> strBuff.append("   SERVICE");
     }
     strBuff.append(" [");
-    if (start == 0) {
+    if (start == null) {
       strBuff.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(format.format(new Date(start)));
+      strBuff.append(format.format(start));
     }
     strBuff.append("]-[");
-    if (end == 0) {
+    if (end == null) {
       strBuff.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(format.format(new Date(end)));
+      strBuff.append(format.format(end));
     }
     strBuff.append("] ");
     if (recoveryCount > 0 || finish) {
@@ -154,7 +126,7 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   public void shutdown() {
     if (!started) {
-      end = System.currentTimeMillis();
+      end = dateTimeService.getLocalDateTime();
       finish = true;
     } else if (!finish) {
       if (startingKey.shutdownMethodName != null) {
@@ -179,7 +151,7 @@ public class Starter implements ThrowRunnable<Throwable> {
         }
       }
     } else {
-      end = System.currentTimeMillis();
+      end = dateTimeService.getLocalDateTime();
     }
   }
 
@@ -190,7 +162,7 @@ public class Starter implements ThrowRunnable<Throwable> {
    */
   public void shutdown(String[] params) {
     if (!started) {
-      end = System.currentTimeMillis();
+      end = dateTimeService.getLocalDateTime();
       finish = true;
     } else if (!finish) {
       if (startingKey.shutdownMethodName != null) {
@@ -216,19 +188,10 @@ public class Starter implements ThrowRunnable<Throwable> {
         }
       }
     } else {
-      end = System.currentTimeMillis();
+      end = dateTimeService.getLocalDateTime();
     }
   }
 
-  /**
-   * @param params
-   * @throws SecurityException
-   * @throws NoSuchMethodException
-   * @throws ClassNotFoundException
-   * @throws IllegalArgumentException
-   * @throws IllegalAccessException
-   * @throws InvocationTargetException
-   */
   public void invoke(String[] params)
       throws SecurityException,
           NoSuchMethodException,
@@ -239,16 +202,6 @@ public class Starter implements ThrowRunnable<Throwable> {
     invoke(startingKey.getMethodName() == null ? "main" : startingKey.getMethodName(), params);
   }
 
-  /**
-   * @param methodName
-   * @param params
-   * @throws ClassNotFoundException
-   * @throws IllegalArgumentException
-   * @throws IllegalAccessException
-   * @throws InvocationTargetException
-   * @throws SecurityException
-   * @throws NoSuchMethodException
-   */
   public void invoke(String methodName, String[] params)
       throws ClassNotFoundException,
           IllegalArgumentException,
@@ -268,65 +221,30 @@ public class Starter implements ThrowRunnable<Throwable> {
     method.invoke(classObject, new Object[] {params});
   }
 
-  /**
-   * startingKeyを取得します。
-   *
-   * @return startingKey
-   */
   public KeyInfo getStartingKey() {
     return startingKey;
   }
 
-  /**
-   * startingKeyを設定します。
-   *
-   * @param startingKey
-   */
   public void setStartingKey(KeyInfo startingKey) {
     this.startingKey = startingKey;
   }
 
-  /**
-   * sourceを取得します。
-   *
-   * @return source
-   */
   public StarterKind getKind() {
     return kind;
   }
 
-  /**
-   * finishを取得します。
-   *
-   * @return finish
-   */
   public boolean isFinish() {
     return finish;
   }
 
-  /**
-   * finishを設定します。
-   *
-   * @param finish
-   */
   public void setFinish(boolean finish) {
     this.finish = finish;
   }
 
-  /**
-   * recoveryCountを取得します。
-   *
-   * @return recoveryCount
-   */
   public long getRecoveryCount() {
     return recoveryCount;
   }
 
-  /**
-   * recoveryCountを設定します。
-   *
-   * @param recoveryCount
-   */
   public void setRecoveryCount(long recoveryCount) {
     this.recoveryCount = recoveryCount;
   }

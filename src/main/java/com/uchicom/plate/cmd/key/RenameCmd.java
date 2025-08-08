@@ -7,6 +7,8 @@ import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.handler.CmdSocketHandler;
 
 /**
+ * 開始中のキー名を変更するコマンド
+ *
  * @author Uchiyama Shigeki
  */
 public class RenameCmd extends AbstractCmd {
@@ -14,18 +16,10 @@ public class RenameCmd extends AbstractCmd {
   /** コマンド文字列 */
   public static final String CMD = "rename";
 
-  /**
-   * @param broker
-   */
   public RenameCmd(Commander broker) {
     super(CMD, broker);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#getHelp()
-   */
   @Override
   public String getHelp() {
     return " "
@@ -35,12 +29,6 @@ public class RenameCmd extends AbstractCmd {
         + "  ex)edit test test2\r\n";
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#checkParam(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public boolean checkParam(CmdSocketHandler handler, String[] params) {
     if (params.length == 2 && handler.getCurrentPort() != null) {
@@ -52,12 +40,6 @@ public class RenameCmd extends AbstractCmd {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.cmd.AbstractCmd#execute(com.uchicom.plate.
-   * CmdSocketHandler, java.lang.String[])
-   */
   @Override
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     String port = handler.getCurrentPort();

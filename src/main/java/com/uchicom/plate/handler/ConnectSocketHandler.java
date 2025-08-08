@@ -8,6 +8,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 /**
+ * コネクトソケットハンドラー
+ *
  * @author Uchiyama Shigeki
  */
 public class ConnectSocketHandler implements Handler {
@@ -32,11 +34,6 @@ public class ConnectSocketHandler implements Handler {
 
   boolean off = false;
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see com.uchicom.plate.Handler#handle(java.nio.channels.SelectionKey)
-   */
   @Override
   public void handle(SelectionKey key) throws IOException {
 
@@ -44,33 +41,31 @@ public class ConnectSocketHandler implements Handler {
       // サーバーのあくせぷと実施(サーバは一個だからいいけど。
       SocketChannel socketChannel = (SocketChannel) key.channel();
       switch (status) {
-        case 0:
+        case 0 -> {
           socketChannel.write(echoOff.asReadOnlyBuffer());
           key.interestOps(SelectionKey.OP_READ);
           System.out.println("ECHOOFF1");
           status = 1;
-          break;
-        case 2:
+        }
+        case 2 -> {
           socketChannel.write(suppress.asReadOnlyBuffer());
           key.interestOps(SelectionKey.OP_READ);
           System.out.println("SUPPRESS");
           status = 3;
-          break;
-        case 4:
+        }
+        case 4 -> {
           socketChannel.write(lineOff.asReadOnlyBuffer());
           System.out.println("LINEOFF");
           key.interestOps(SelectionKey.OP_READ);
           status = 5;
-          break;
-        case 6:
+        }
+        case 6 -> {
           socketChannel.write(buffer.asReadOnlyBuffer());
           socketChannel.register(
               key.selector(), SelectionKey.OP_READ, new CmdSocketHandler(socketChannel));
           System.out.println("呼び出し");
           status = 7;
-          break;
-        default:
-          // 何も無し
+        }
       }
     }
 
@@ -83,35 +78,23 @@ public class ConnectSocketHandler implements Handler {
           status++;
 
           switch (cmd.get(i++)) {
-            case Telnet.DONT:
-              System.out.print("DONT");
-              break;
-            case Telnet.WILL:
-              System.out.print("WILL");
-              break;
-            case Telnet.DO:
-              System.out.print("DO");
-              break;
-            case Telnet.WONT:
-              System.out.print("WONT");
-              break;
-            default:
-              System.out.println("DO,DONT,WILL,WONTでない");
+            case Telnet.DONT -> System.out.print("DONT");
+            case Telnet.WILL -> System.out.print("WILL");
+            case Telnet.DO -> System.out.print("DO");
+            case Telnet.WONT -> System.out.print("WONT");
+            default -> System.out.println("DO,DONT,WILL,WONTでない");
           }
 
           switch (cmd.get(i++)) {
-            case Telnet.ECHO:
+            case Telnet.ECHO -> {
               off = true;
               System.out.println("ECHO");
-              break;
-            case Telnet.TELNET_LINE_MODE:
-              System.out.println("LINE");
-              break;
-            case Telnet.SUPPRESS_GO_AHEAD:
-              System.out.println("SUPPRESS_GO_AHEAD");
-              break;
-            default:
-              System.out.println("その他");
+            }
+            case Telnet.TELNET_LINE_MODE -> System.out.println("LINE");
+
+            case Telnet.SUPPRESS_GO_AHEAD -> System.out.println("SUPPRESS_GO_AHEAD");
+
+            default -> System.out.println("その他");
           }
         } else {
           System.out.println(Integer.toHexString(0xFF & ch));

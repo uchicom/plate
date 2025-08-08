@@ -1,8 +1,6 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,71 +24,30 @@ public class Porter { // implements Runnable {
   /** ポートのクラスローダー */
   URLClassLoader classLoader;
 
-  /**
-   * @param port
-   * @param plate
-   * @throws IOException
-   */
   public Porter(Main plate) {
     this.plate = plate;
   }
 
-  /**
-   * listを取得します。
-   *
-   * @return list
-   */
   public List<KeyInfo> getList() {
     return list;
   }
 
-  /**
-   * listを設定します。
-   *
-   * @param list
-   */
   public void setList(List<KeyInfo> list) {
     this.list = list;
   }
 
-  /**
-   * cpListを取得します。
-   *
-   * @return cpList
-   */
   public List<CpInfo> getCpList() {
     return cpList;
   }
 
-  /**
-   * cpListを設定します。
-   *
-   * @param cpList
-   */
   public void setCpList(List<CpInfo> cpList) {
     this.cpList = cpList;
   }
 
-  /**
-   * @param classPath
-   */
   public void addCp(CpInfo cpInfo) {
     cpList.add(cpInfo);
   }
 
-  /**
-   * @param protocol
-   * @param host
-   * @param file
-   * @throws MalformedURLException
-   */
-  public void addCp(String protocol, String host, String file) throws MalformedURLException {
-    cpList.add(new CpInfo(protocol, host, file));
-  }
-
-  /**
-   * @param classPath
-   */
   public void removeCp(String iCp) {
     cpList.remove(Integer.parseInt(iCp));
   }
@@ -114,31 +71,15 @@ public class Porter { // implements Runnable {
     }
   }
 
-  /**
-   * classLoaderを取得します。
-   *
-   * @return classLoader
-   */
   public URLClassLoader getClassLoader() {
     return classLoader;
   }
 
-  /**
-   * classLoaderを設定します。
-   *
-   * @param classLoader
-   */
   public void setClassLoader(URLClassLoader classLoader) {
     this.classLoader = classLoader;
   }
 
-  /**
-   * クラスをロードする。
-   *
-   * @param className
-   * @return
-   * @throws ClassNotFoundException
-   */
+  /** クラスをロードする。 */
   public Class<?> loadClass(String className) throws ClassNotFoundException {
     if (classLoader != null) {
       return classLoader.loadClass(className);
