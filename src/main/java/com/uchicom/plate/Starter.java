@@ -23,6 +23,8 @@ public class Starter implements ThrowRunnable<Throwable> {
   /** 実行クラス保持用 */
   private Class<?> classObject;
 
+  private final Main plate;
+
   public String[] getParams() {
     return params;
   }
@@ -60,7 +62,7 @@ public class Starter implements ThrowRunnable<Throwable> {
     this.started = started;
   }
 
-  public Starter(KeyInfo startingKey, String[] params, StarterKind kind) {
+  public Starter(KeyInfo startingKey, String[] params, StarterKind kind, Main plate) {
     this.startingKey = startingKey;
     if (params == null) {
       this.params = new String[0];
@@ -68,6 +70,7 @@ public class Starter implements ThrowRunnable<Throwable> {
       this.params = params;
     }
     this.kind = kind;
+    this.plate = plate;
   }
 
   @Override
@@ -134,20 +137,15 @@ public class Starter implements ThrowRunnable<Throwable> {
           Method method = classObject.getMethod(startingKey.shutdownMethodName);
           method.invoke(classObject);
         } catch (SecurityException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (IllegalArgumentException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (IllegalAccessException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (InvocationTargetException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         }
       }
     } else {
@@ -171,20 +169,15 @@ public class Starter implements ThrowRunnable<Throwable> {
               classObject.getMethod(startingKey.shutdownMethodName, new Class[] {String[].class});
           method.invoke(classObject, new Object[] {params});
         } catch (SecurityException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (IllegalArgumentException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (IllegalAccessException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         } catch (InvocationTargetException e) {
-          e.printStackTrace();
-          System.err.print(e.getMessage());
+          plate.stackTrace("Starter invoke error", e);
         }
       }
     } else {
@@ -209,7 +202,6 @@ public class Starter implements ThrowRunnable<Throwable> {
           InvocationTargetException,
           SecurityException,
           NoSuchMethodException {
-    System.out.println(Thread.currentThread().getContextClassLoader());
     if (startingKey.getClassLoader() != null) {
       Thread.currentThread().setContextClassLoader(startingKey.getClassLoader());
       classObject = startingKey.getClassLoader().loadClass(startingKey.getClassName());
@@ -247,5 +239,9 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   public void setRecoveryCount(long recoveryCount) {
     this.recoveryCount = recoveryCount;
+  }
+
+  public void stackTrace(String message, Throwable t) {
+    plate.stackTrace(message, t);
   }
 }

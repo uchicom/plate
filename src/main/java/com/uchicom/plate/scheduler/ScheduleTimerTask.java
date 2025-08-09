@@ -1,25 +1,25 @@
 // (C) 2022 uchicom
 package com.uchicom.plate.scheduler;
 
-import com.uchicom.plate.util.ThrowRunnable;
+import com.uchicom.plate.Starter;
 import java.util.TimerTask;
 
 public class ScheduleTimerTask extends TimerTask {
 
   Schedule schedule;
-  ThrowRunnable<Throwable> runnable;
+  Starter starter;
 
-  public ScheduleTimerTask(Schedule schedule, ThrowRunnable<Throwable> runnable) {
+  public ScheduleTimerTask(Schedule schedule, Starter starter) {
     this.schedule = schedule;
-    this.runnable = runnable;
+    this.starter = starter;
   }
 
   @Override
   public void run() {
     try {
-      runnable.run();
+      starter.run();
     } catch (Throwable t) {
-      t.printStackTrace();
+      starter.stackTrace("Starter run error", t);
     } finally {
       schedule.register();
     }
