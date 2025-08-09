@@ -1,6 +1,7 @@
 // (C) 2012 uchicom
 package com.uchicom.plate.handler;
 
+import com.uchicom.plate.Main;
 import com.uchicom.plate.util.Telnet;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -33,6 +34,11 @@ public class ConnectSocketHandler implements Handler {
   private final ByteBuffer cmd = ByteBuffer.allocate(256);
 
   boolean off = false;
+  private final Main plate;
+
+  public ConnectSocketHandler(Main plate) {
+    this.plate = plate;
+  }
 
   @Override
   public void handle(SelectionKey key) throws IOException {
@@ -44,26 +50,26 @@ public class ConnectSocketHandler implements Handler {
         case 0 -> {
           socketChannel.write(echoOff.asReadOnlyBuffer());
           key.interestOps(SelectionKey.OP_READ);
-          System.out.println("ECHOOFF1");
+          plate.info("ECHOOFF1");
           status = 1;
         }
         case 2 -> {
           socketChannel.write(suppress.asReadOnlyBuffer());
           key.interestOps(SelectionKey.OP_READ);
-          System.out.println("SUPPRESS");
+          plate.info("SUPPRESS");
           status = 3;
         }
         case 4 -> {
           socketChannel.write(lineOff.asReadOnlyBuffer());
-          System.out.println("LINEOFF");
+          plate.info("LINEOFF");
           key.interestOps(SelectionKey.OP_READ);
           status = 5;
         }
         case 6 -> {
           socketChannel.write(buffer.asReadOnlyBuffer());
           socketChannel.register(
-              key.selector(), SelectionKey.OP_READ, new CmdSocketHandler(socketChannel));
-          System.out.println("呼び出し");
+              key.selector(), SelectionKey.OP_READ, new CmdSocketHandler(socketChannel, plate));
+          plate.info("REGISTER");
           status = 7;
         }
       }
@@ -78,26 +84,26 @@ public class ConnectSocketHandler implements Handler {
           status++;
 
           switch (cmd.get(i++)) {
-            case Telnet.DONT -> System.out.print("DONT");
-            case Telnet.WILL -> System.out.print("WILL");
-            case Telnet.DO -> System.out.print("DO");
-            case Telnet.WONT -> System.out.print("WONT");
-            default -> System.out.println("DO,DONT,WILL,WONTでない");
+            case Telnet.DONT -> plate.info("DONT");
+            case Telnet.WILL -> plate.info("WILL");
+            case Telnet.DO -> plate.info("DO");
+            case Telnet.WONT -> plate.info("WONT");
+            default -> plate.info("NOT DO,DONT,WILL,WONT");
           }
 
           switch (cmd.get(i++)) {
             case Telnet.ECHO -> {
               off = true;
-              System.out.println("ECHO");
+              plate.info("ECHO");
             }
-            case Telnet.TELNET_LINE_MODE -> System.out.println("LINE");
+            case Telnet.TELNET_LINE_MODE -> plate.info("LINE");
 
-            case Telnet.SUPPRESS_GO_AHEAD -> System.out.println("SUPPRESS_GO_AHEAD");
+            case Telnet.SUPPRESS_GO_AHEAD -> plate.info("SUPPRESS_GO_AHEAD");
 
-            default -> System.out.println("その他");
+            default -> plate.info("OTHER");
           }
         } else {
-          System.out.println(Integer.toHexString(0xFF & ch));
+          plate.info(Integer.toHexString(0xFF & ch));
         }
         key.interestOps(SelectionKey.OP_WRITE);
       }

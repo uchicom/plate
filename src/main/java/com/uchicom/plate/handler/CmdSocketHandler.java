@@ -2,7 +2,7 @@
 package com.uchicom.plate.handler;
 
 import com.uchicom.plate.Commander;
-import com.uchicom.plate.Constants;
+import com.uchicom.plate.Main;
 import com.uchicom.plate.cmd.AbstractCmd;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,8 +37,11 @@ public class CmdSocketHandler implements Handler {
   /** ソケットチャンネル */
   private SocketChannel socketChannel;
 
-  public CmdSocketHandler(SocketChannel socketChannel) {
+  private final Main plate;
+
+  public CmdSocketHandler(SocketChannel socketChannel, Main plate) {
     this.socketChannel = socketChannel;
+    this.plate = plate;
   }
 
   public void exit() throws IOException {
@@ -167,7 +170,7 @@ public class CmdSocketHandler implements Handler {
           key.interestOps(SelectionKey.OP_WRITE);
         }
       } catch (IOException e) {
-        e.printStackTrace();
+        plate.stackTrace("Command error", e);
         key.cancel();
       }
     }
@@ -255,9 +258,6 @@ public class CmdSocketHandler implements Handler {
     // 後ろからチェックして\r\nがあればコマンド解析開始
     while (cmd.position() < cmd.limit()) {
       int ch = (int) cmd.get();
-      System.out.print((char) ch);
-      System.out.println(Integer.toHexString((char) ch));
-      if (Constants.DEBUG) System.out.println("[" + (char) ch + "]");
       if (ch == 0x08) {
         // BSなので一文字消す。
         if (cmdBuff.length() > 0) {
@@ -285,11 +285,10 @@ public class CmdSocketHandler implements Handler {
           }
         }
       } else if (0x7F == ch) {
-        System.out.println("7F");
+        plate.info("7F");
         // なにもしていない
       } else {
-
-        System.out.println("other");
+        plate.info("other");
       }
     }
     cmd.clear();

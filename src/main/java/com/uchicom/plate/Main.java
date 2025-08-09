@@ -26,6 +26,8 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -88,6 +90,8 @@ public class Main {
 
   private final ScheduleFactory scheduleFactory;
 
+  private final Logger logger;
+
   /**
    * userを取得します。
    *
@@ -115,8 +119,9 @@ public class Main {
   }
 
   /** 引数なしのコンストラクタ。 ポートはデフォルトポートで起動する。 */
-  public Main(ScheduleFactory scheduleFactory) {
+  public Main(ScheduleFactory scheduleFactory, Logger logger) {
     this.scheduleFactory = scheduleFactory;
+    this.logger = logger;
   }
 
   /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
@@ -134,7 +139,7 @@ public class Main {
           try {
             starter.run();
           } catch (Throwable t) {
-            t.printStackTrace();
+            stackTrace("Starter start error", t);
           }
         });
   }
@@ -146,7 +151,7 @@ public class Main {
 
   /** キーを追加する。 */
   public void addKey(String key, String className, String methodName, String port) {
-    KeyInfo keyInfo = new KeyInfo(key, className, methodName);
+    KeyInfo keyInfo = new KeyInfo(key, className, methodName, this);
     if (portMap.containsKey(port)) {
       portMap.get(port).getList().add(keyInfo);
       keyInfo.setPorter(portMap.get(port));
@@ -294,7 +299,7 @@ public class Main {
             .forEach(
                 service -> {
                   KeyInfo startKey =
-                      new KeyInfo(service.key, service.className, service.method.startup);
+                      new KeyInfo(service.key, service.className, service.method.startup, this);
                   startKey.setPorter(servicePorter);
                   startKey.shutdownMethodName = service.method.shutdown;
                   servicePorter.getList().add(startKey);
@@ -342,7 +347,8 @@ public class Main {
             .sorted((a, b) -> a.order.startup - b.order.startup)
             .forEach(
                 batch -> {
-                  KeyInfo startKey = new KeyInfo(batch.key, batch.className, batch.method.startup);
+                  KeyInfo startKey =
+                      new KeyInfo(batch.key, batch.className, batch.method.startup, this);
                   startKey.shutdownMethodName = batch.method.shutdown;
                   startKey.setPorter(batchPorter);
                   batchPorter.getList().add(startKey);
@@ -427,7 +433,7 @@ public class Main {
                         .filter(keyInfo -> keyInfo.getKey().equals(service.key))
                         .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
                   } catch (Exception e) {
-                    e.printStackTrace();
+                    stackTrace("Starter shutdown error", e);
                   }
                 });
       }
@@ -510,5 +516,13 @@ public class Main {
       }
     }
     throw new CmdException("キーが設定されていません.");
+  }
+
+  public void stackTrace(String message, Throwable t) {
+    logger.log(Level.SEVERE, message, 5);
+  }
+
+  public void info(String message) {
+    logger.info(message);
   }
 }

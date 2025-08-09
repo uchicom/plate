@@ -150,13 +150,14 @@ public class Commander implements Runnable {
   public void run() {
     // サーバーソケットを作成する
     try (ServerSocketChannel serverChannel = ServerSocketChannel.open(); ) {
+      plate.info("Start commander");
       serverChannel.socket().setReuseAddress(true);
       // backはいくつか指定可能にしたほうが良いかな
       serverChannel.socket().bind(new InetSocketAddress(address, port), 10);
       serverChannel.configureBlocking(false);
 
       Selector selector = Selector.open();
-      serverChannel.register(selector, SelectionKey.OP_ACCEPT, new CmdServerHandler());
+      serverChannel.register(selector, SelectionKey.OP_ACCEPT, new CmdServerHandler(plate));
       while (alive) {
         try {
           if (selector.select() > 0) {
@@ -173,11 +174,11 @@ public class Commander implements Runnable {
             }
           }
         } catch (Throwable e) {
-          e.printStackTrace();
+          plate.stackTrace("Commander error", e);
         }
       }
     } catch (IOException e1) {
-      e1.printStackTrace();
+      plate.stackTrace("Commander error", e1);
     }
   }
 

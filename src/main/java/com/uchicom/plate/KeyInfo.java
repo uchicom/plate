@@ -61,6 +61,8 @@ public class KeyInfo {
 
   private URLClassLoader classLoader = null;
 
+  private final Main plate;
+
   public URLClassLoader getClassLoader() {
     return classLoader;
   }
@@ -81,16 +83,14 @@ public class KeyInfo {
 
   public KeyInfo(String key) {
     this.key = key;
+    this.plate = null;
   }
 
-  public KeyInfo(String key, String className) {
-    this(key, className, "main");
-  }
-
-  public KeyInfo(String key, String className, String methodName) {
+  public KeyInfo(String key, String className, String methodName, Main plate) {
     this.key = key;
     this.className = className;
     this.methodName = methodName;
+    this.plate = plate;
   }
 
   public String getKey() {
@@ -135,7 +135,7 @@ public class KeyInfo {
   }
 
   public Starter create(String[] params, StarterKind kind) {
-    Starter starter = new Starter(this, params, kind);
+    Starter starter = new Starter(this, params, kind, plate);
     starterList.add(starter);
     return starter;
   }
@@ -164,11 +164,6 @@ public class KeyInfo {
   public void build() {
     if (cpList.size() > 0) {
       URL[] urls = CpInfo.toUrlArray(cpList, CpInfo.STATUS_INCLUDED);
-      if (Constants.DEBUG) {
-        for (URL url : urls) {
-          System.out.println(url.getPath());
-        }
-      }
       if (porter.getClassLoader() != null) {
         classLoader = new URLClassLoader(urls, porter.getClassLoader());
       } else {
