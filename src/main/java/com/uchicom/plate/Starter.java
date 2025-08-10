@@ -6,7 +6,6 @@ import com.uchicom.plate.util.ThrowRunnable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * 起動クラス
@@ -41,9 +40,6 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   private boolean finish;
   private boolean started;
-
-  public static final DateTimeFormatter format =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
   /** 起動元のソース */
   private StarterKind kind;
@@ -98,13 +94,13 @@ public class Starter implements ThrowRunnable<Throwable> {
     if (start == null) {
       strBuff.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(format.format(start));
+      strBuff.append(Constants.dateTimeFormater.format(start));
     }
     strBuff.append("]-[");
     if (end == null) {
       strBuff.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(format.format(end));
+      strBuff.append(Constants.dateTimeFormater.format(end));
     }
     strBuff.append("] ");
     if (recoveryCount > 0 || finish) {
@@ -136,6 +132,7 @@ public class Starter implements ThrowRunnable<Throwable> {
         try {
           Method method = classObject.getMethod(startingKey.shutdownMethodName);
           method.invoke(classObject);
+          finish = true;
         } catch (SecurityException e) {
           plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {
@@ -168,6 +165,7 @@ public class Starter implements ThrowRunnable<Throwable> {
           Method method =
               classObject.getMethod(startingKey.shutdownMethodName, new Class[] {String[].class});
           method.invoke(classObject, new Object[] {params});
+          finish = true;
         } catch (SecurityException e) {
           plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {

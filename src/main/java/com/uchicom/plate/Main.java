@@ -37,13 +37,6 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class Main {
 
-  /** コマンドプロンプトのデフォルトポート */
-  public static final int DEFAULT_PORT = 8124;
-
-  public static final int DEFAULT_POOL_SIZE = 11;
-
-  public static final String DEFAULT_ADDRESS = "localhost";
-
   public Timer timer = new Timer();
 
   /**
@@ -51,32 +44,28 @@ public class Main {
    * 任意でデフォルトの設定ファイル名を指定する。指定されている場合は設定ファイルをロードする。
    */
   public static void main(String[] args) {
-    Parameter parameter = new Parameter(args);
+    var parameter = new Parameter(args);
     var main = DIFactory.main();
 
-    if (parameter.is("host")) {
-      main.address = parameter.get("host");
-    }
-    if (parameter.is("port")) {
-      main.port = parameter.getInt("port");
-    }
+    main.address = parameter.get("host", Constants.DEFAULT_ADDRESS);
+    main.port = parameter.getInt("port", Constants.DEFAULT_PORT);
     if (parameter.is("file")) {
       // 設定ファイルロード処理
       main.load(parameter.getFile("file"));
     }
 
-    Runtime.getRuntime().addShutdownHook(new ShutdownHook(main));
+    Runtime.getRuntime().addShutdownHook(new Thread(main::shutdown));
     main.execute();
   }
 
   /** スレッドプール */
-  ExecutorService exec = Executors.newFixedThreadPool(DEFAULT_POOL_SIZE);
+  ExecutorService exec = Executors.newFixedThreadPool(Constants.DEFAULT_POOL_SIZE);
 
   /** コンソール待ちうけアドレス */
-  private String address = DEFAULT_ADDRESS;
+  private String address = Constants.DEFAULT_ADDRESS;
 
   /** ポート */
-  private int port = DEFAULT_PORT;
+  private int port = Constants.DEFAULT_PORT;
 
   /** キー情報保持マップ */
   private Map<String, Porter> portMap = new HashMap<String, Porter>();
@@ -91,6 +80,17 @@ public class Main {
   private final ScheduleFactory scheduleFactory;
 
   private final Logger logger;
+
+  public Main(ScheduleFactory scheduleFactory, Logger logger) {
+    this.scheduleFactory = scheduleFactory;
+    this.logger = logger;
+  }
+
+  /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
+  public void execute() {
+    Commander commander = new Commander(address, port, this);
+    new Thread(commander).start();
+  }
 
   /**
    * userを取得します。
@@ -116,18 +116,6 @@ public class Main {
   /** cryptPassを設定します。 */
   public void setCryptPass(String cryptPass) {
     this.cryptPass = cryptPass;
-  }
-
-  /** 引数なしのコンストラクタ。 ポートはデフォルトポートで起動する。 */
-  public Main(ScheduleFactory scheduleFactory, Logger logger) {
-    this.scheduleFactory = scheduleFactory;
-    this.logger = logger;
-  }
-
-  /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
-  public void execute() {
-    Commander commander = new Commander(address, port, this);
-    new Thread(commander).start();
   }
 
   /** スタータークラスをスレッドプールを利用して起動する。 */
@@ -417,27 +405,30 @@ public class Main {
 
   /** サーバーを終了する。 */
   public void exit() {
+    shutdown();
     System.exit(0);
   }
 
   /** 全ての実行を自動復帰せずに終了させる. できるかぎりshutdownする. */
   public void shutdown() {
-    if (config.service != null) {
-      if (config.service.services != null) {
-        config.service.services.stream()
-            .sorted((a, b) -> a.order.shutdown - b.order.shutdown)
-            .forEach(
-                service -> {
-                  try {
-                    portMap.get("service").getList().stream()
-                        .filter(keyInfo -> keyInfo.getKey().equals(service.key))
-                        .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
-                  } catch (Exception e) {
-                    stackTrace("Starter shutdown error", e);
-                  }
-                });
-      }
+    if (config.service == null) {
+      return;
     }
+    if (config.service.services == null) {
+      return;
+    }
+    config.service.services.stream()
+        .sorted((a, b) -> a.order.shutdown - b.order.shutdown)
+        .forEach(
+            service -> {
+              try {
+                portMap.get("service").getList().stream()
+                    .filter(keyInfo -> keyInfo.getKey().equals(service.key))
+                    .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
+              } catch (Exception e) {
+                stackTrace("Starter shutdown error", e);
+              }
+            });
   }
 
   /**
