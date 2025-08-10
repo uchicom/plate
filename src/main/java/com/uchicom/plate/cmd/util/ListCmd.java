@@ -2,10 +2,10 @@
 package com.uchicom.plate.cmd.util;
 
 import com.uchicom.plate.Commander;
+import com.uchicom.plate.Constants;
 import com.uchicom.plate.CpInfo;
 import com.uchicom.plate.KeyInfo;
 import com.uchicom.plate.Porter;
-import com.uchicom.plate.Starter;
 import com.uchicom.plate.cmd.AbstractCmd;
 import com.uchicom.plate.handler.CmdSocketHandler;
 import com.uchicom.plate.service.DateTimeService;
@@ -41,7 +41,7 @@ public class ListCmd extends AbstractCmd {
     Iterator<Entry<String, Porter>> ite = portMap.entrySet().iterator();
     if (ite.hasNext()) {
       builder.append("OK\r\n---plate Infomation---\r\n");
-      builder.append(Starter.format.format(dateTimeService.getLocalDateTime()));
+      builder.append(Constants.dateTimeFormater.format(dateTimeService.getLocalDateTime()));
       builder.append("\r\n\r\n");
       while (ite.hasNext()) {
         // ポート情報
