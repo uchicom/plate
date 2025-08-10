@@ -1,6 +1,7 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.enumeration.CpState;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -13,13 +14,9 @@ import java.util.List;
  */
 public class CpInfo {
 
-  public static final int STATUS_INCLUDED = 1;
-  public static final int STATUS_EXCLUDED = 0;
-  public static final int STATUS_UNCHANGE = -1;
-
   private URL url = null;
 
-  private int status = 0;
+  private CpState status = CpState.EXCLUDED;
 
   public CpInfo(String classPath) {
     try {
@@ -37,45 +34,21 @@ public class CpInfo {
     this.url = url;
   }
 
-  public int getStatus() {
-    return status;
-  }
-
-  public void setStatus(int status) {
+  public void setStatus(CpState status) {
     this.status = status;
   }
 
   /** リストからURLの配列に入れ替えつつ、 statusに引数のステータスを設定する。 */
-  public static URL[] toUrlArray(List<CpInfo> cpList, int status) {
+  public static URL[] toUrlArray(List<CpInfo> cpList, CpState status) {
     int iMaxList = cpList.size();
     URL[] urls = new URL[iMaxList];
     for (int iList = 0; iList < iMaxList; iList++) {
       CpInfo cpInfo = cpList.get(iList);
       urls[iList] = cpInfo.getUrl();
-      if (status == STATUS_INCLUDED) {
-        cpInfo.setStatus(STATUS_INCLUDED);
-      } else if (status == STATUS_EXCLUDED) {
-        cpInfo.setStatus(STATUS_EXCLUDED);
-      }
-    }
-    return urls;
-  }
-
-  /** 初回ロード時にINCLUDEされていたデータをURLを作成する。 */
-  public static URL[] toUrlArrayInclude(List<CpInfo> cpList) {
-    int iMaxList = 0;
-    for (int iList = 0; iList < iMaxList; iList++) {
-      CpInfo cpInfo = cpList.get(iList);
-      if (cpInfo.getStatus() == STATUS_INCLUDED) {
-        iMaxList++;
-      }
-    }
-    URL[] urls = new URL[iMaxList];
-    int iArray = 0;
-    for (int iList = 0; iList < iMaxList; iList++) {
-      CpInfo cpInfo = cpList.get(iList);
-      if (cpInfo.getStatus() == STATUS_INCLUDED) {
-        urls[iArray++] = cpInfo.getUrl();
+      if (status == CpState.INCLUDED) {
+        cpInfo.setStatus(CpState.INCLUDED);
+      } else if (status == CpState.EXCLUDED) {
+        cpInfo.setStatus(CpState.EXCLUDED);
       }
     }
     return urls;
@@ -89,7 +62,7 @@ public class CpInfo {
     //        strBuff.append(' ');
     strBuff.append(url.toString());
     strBuff.append(' ');
-    strBuff.append(status == CpInfo.STATUS_EXCLUDED ? "EXCLUDED" : "INCLUDED");
+    strBuff.append(status);
     strBuff.append("\r\n");
     return strBuff.toString();
   }

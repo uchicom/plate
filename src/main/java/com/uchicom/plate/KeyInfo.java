@@ -2,6 +2,9 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
+import com.uchicom.plate.enumeration.CpState;
+import com.uchicom.plate.enumeration.KeyState;
+import com.uchicom.plate.enumeration.RecoveryMethod;
 import com.uchicom.plate.scheduler.Schedule;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -47,15 +50,9 @@ public class KeyInfo {
     this.porter = porter;
   }
 
-  public static final int STATUS_ENABLE = 1;
-  public static final int STATUS_DISABLE = 0;
+  private KeyState status = KeyState.DISABLE;
 
-  public static final int AUTO = 1;
-  public static final int MANUAL = 0;
-
-  private int status = STATUS_DISABLE;
-
-  private int recovery = MANUAL;
+  private RecoveryMethod recovery = RecoveryMethod.MANUAL;
 
   private List<CpInfo> cpList = new ArrayList<CpInfo>();
 
@@ -67,18 +64,10 @@ public class KeyInfo {
     return classLoader;
   }
 
-  public void setClassLoader(URLClassLoader classLoader) {
-    this.classLoader = classLoader;
-  }
-
   private List<Starter> starterList = new ArrayList<Starter>();
 
   public List<Starter> getStarterList() {
     return starterList;
-  }
-
-  public void setStarterList(List<Starter> starterList) {
-    this.starterList = starterList;
   }
 
   public KeyInfo(String key) {
@@ -122,16 +111,8 @@ public class KeyInfo {
     return key.hashCode();
   }
 
-  public int getStatus() {
-    return status;
-  }
-
-  public void setStatus(int status) {
+  public void setStatus(KeyState status) {
     this.status = status;
-  }
-
-  public Starter create(Starter starter) {
-    return create(starter.getParams(), starter.getKind());
   }
 
   public Starter create(String[] params, StarterKind kind) {
@@ -153,17 +134,9 @@ public class KeyInfo {
     }
   }
 
-  public List<CpInfo> getCpList() {
-    return cpList;
-  }
-
-  public void setCpList(List<CpInfo> cpList) {
-    this.cpList = cpList;
-  }
-
   public void build() {
     if (cpList.size() > 0) {
-      URL[] urls = CpInfo.toUrlArray(cpList, CpInfo.STATUS_INCLUDED);
+      URL[] urls = CpInfo.toUrlArray(cpList, CpState.INCLUDED);
       if (porter.getClassLoader() != null) {
         classLoader = new URLClassLoader(urls, porter.getClassLoader());
       } else {
@@ -172,11 +145,11 @@ public class KeyInfo {
     }
   }
 
-  public int getRecovery() {
+  public RecoveryMethod getRecovery() {
     return recovery;
   }
 
-  public void setRecovery(int recovery) {
+  public void setRecovery(RecoveryMethod recovery) {
     this.recovery = recovery;
   }
 
@@ -186,32 +159,32 @@ public class KeyInfo {
 
   @Override
   public String toString() {
-    StringBuilder strBuff = new StringBuilder();
-    strBuff.append(' ');
-    strBuff.append(key);
-    strBuff.append(' ');
-    strBuff.append(className);
-    strBuff.append(' ');
-    strBuff.append(methodName);
-    strBuff.append(' ');
-    strBuff.append(status == KeyInfo.STATUS_DISABLE ? "DISABLE" : "ENABLE");
-    strBuff.append(' ');
-    strBuff.append(recovery == KeyInfo.AUTO ? "AUTO" : "MANUAL");
-    strBuff.append("\r\n");
+    var builder = new StringBuilder();
+    builder.append(' ');
+    builder.append(key);
+    builder.append(' ');
+    builder.append(className);
+    builder.append(' ');
+    builder.append(methodName);
+    builder.append(' ');
+    builder.append(status);
+    builder.append(' ');
+    builder.append(recovery);
+    builder.append("\r\n");
     // 別名クラスパス情報
 
     for (CpInfo cpInfo : cpList) {
-      strBuff.append(cpInfo);
+      builder.append(cpInfo);
     }
     // スターター情報
     for (Starter starter : starterList) {
-      strBuff.append(starter);
+      builder.append(starter);
     }
     // スケジュール
     if (schedule != null) {
-      strBuff.append(schedule);
+      builder.append(schedule);
     }
-    strBuff.append("\r\n");
-    return strBuff.toString();
+    builder.append("\r\n");
+    return builder.toString();
   }
 }
