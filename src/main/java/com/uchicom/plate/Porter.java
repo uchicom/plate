@@ -1,6 +1,7 @@
 // (C) 2012 uchicom
 package com.uchicom.plate;
 
+import com.uchicom.plate.enumeration.CpState;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,16 +33,8 @@ public class Porter { // implements Runnable {
     return list;
   }
 
-  public void setList(List<KeyInfo> list) {
-    this.list = list;
-  }
-
   public List<CpInfo> getCpList() {
     return cpList;
-  }
-
-  public void setCpList(List<CpInfo> cpList) {
-    this.cpList = cpList;
   }
 
   public void addCp(CpInfo cpInfo) {
@@ -54,17 +47,7 @@ public class Porter { // implements Runnable {
 
   public void build() {
     if (cpList.size() > 0) {
-      classLoader = new URLClassLoader(CpInfo.toUrlArray(cpList, CpInfo.STATUS_INCLUDED));
-    }
-    for (KeyInfo key : list) {
-      key.build();
-    }
-  }
-
-  /** load時のビルド */
-  public void initBuild() {
-    if (cpList.size() > 0) {
-      classLoader = new URLClassLoader(CpInfo.toUrlArrayInclude(cpList));
+      classLoader = new URLClassLoader(CpInfo.toUrlArray(cpList, CpState.INCLUDED));
     }
     for (KeyInfo key : list) {
       key.build();
@@ -73,10 +56,6 @@ public class Porter { // implements Runnable {
 
   public URLClassLoader getClassLoader() {
     return classLoader;
-  }
-
-  public void setClassLoader(URLClassLoader classLoader) {
-    this.classLoader = classLoader;
   }
 
   /** クラスをロードする。 */

@@ -3,6 +3,9 @@ package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
+import com.uchicom.plate.enumeration.CpState;
+import com.uchicom.plate.enumeration.KeyState;
+import com.uchicom.plate.enumeration.RecoveryMethod;
 import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.factory.di.DIFactory;
 import com.uchicom.plate.scheduler.Schedule;
@@ -186,7 +189,8 @@ public class Main {
           }
           // 再起動処理
           for (Starter starter : startingKey.getStarterList()) {
-            if (!starter.isFinish() && starter.getStartingKey().getRecovery() == KeyInfo.AUTO) {
+            if (!starter.isFinish()
+                && starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO) {
               starter.setRecoveryCount(starter.getRecoveryCount() + 1);
               start(starter);
             } else {
@@ -228,25 +232,25 @@ public class Main {
   /** キーを使用可にする。 */
   public void enableKey(String key, String port) throws CmdException {
     checkPort(port);
-    keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_ENABLE));
+    keyAction(key, port, startingKey -> startingKey.setStatus(KeyState.ENABLE));
   }
 
   /** キーを使用不可にする。 */
   public void disableKey(String key, String port) throws CmdException {
     checkPort(port);
-    keyAction(key, port, startingKey -> startingKey.setStatus(KeyInfo.STATUS_DISABLE));
+    keyAction(key, port, startingKey -> startingKey.setStatus(KeyState.DISABLE));
   }
 
   /** キーを自動リカバリーにする。 */
   public void autoKey(String key, String port) throws CmdException {
     checkPort(port);
-    keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.AUTO));
+    keyAction(key, port, startingKey -> startingKey.setRecovery(RecoveryMethod.AUTO));
   }
 
   /** キーを自動リカバリーにする。 */
   public void manualKey(String key, String port) throws CmdException {
     checkPort(port);
-    keyAction(key, port, startingKey -> startingKey.setRecovery(KeyInfo.MANUAL));
+    keyAction(key, port, startingKey -> startingKey.setRecovery(RecoveryMethod.MANUAL));
   }
 
   PlateConfig loadConfig(File file) {
@@ -278,7 +282,7 @@ public class Main {
             classPath -> {
               CpInfo cpInfo = new CpInfo(classPath);
               servicePorter.addCp(cpInfo);
-              cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+              cpInfo.setStatus(CpState.INCLUDED);
             });
       }
       if (config.service.services != null) {
@@ -296,14 +300,14 @@ public class Main {
                         classPath -> {
                           CpInfo cpInfo = new CpInfo(classPath);
                           startKey.addCp(cpInfo);
-                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                          cpInfo.setStatus(CpState.INCLUDED);
                         });
                   }
                   if (!service.disabled) {
-                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                    startKey.setStatus(KeyState.ENABLE);
                   }
                   if (service.recovery) {
-                    startKey.setRecovery(KeyInfo.AUTO);
+                    startKey.setRecovery(RecoveryMethod.AUTO);
                   }
                   startKey.create(service.parameters, StarterKind.SERVICE);
                 });
@@ -327,7 +331,7 @@ public class Main {
             classPath -> {
               CpInfo cpInfo = new CpInfo(classPath);
               batchPorter.addCp(cpInfo);
-              cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+              cpInfo.setStatus(CpState.INCLUDED);
             });
       }
       if (config.batch.batches != null) {
@@ -345,11 +349,11 @@ public class Main {
                         classPath -> {
                           CpInfo cpInfo = new CpInfo(classPath);
                           startKey.addCp(cpInfo);
-                          cpInfo.setStatus(CpInfo.STATUS_INCLUDED);
+                          cpInfo.setStatus(CpState.INCLUDED);
                         });
                   }
                   if (!batch.disabled) {
-                    startKey.setStatus(KeyInfo.STATUS_ENABLE);
+                    startKey.setStatus(KeyState.ENABLE);
                   }
                   if (batch.schedule != null) {
                     Schedule schedule = null;
@@ -410,7 +414,7 @@ public class Main {
   }
 
   /** 全ての実行を自動復帰せずに終了させる. できるかぎりshutdownする. */
-  public void shutdown() {
+  void shutdown() {
     if (config.service == null) {
       return;
     }

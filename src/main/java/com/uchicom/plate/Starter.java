@@ -84,43 +84,39 @@ public class Starter implements ThrowRunnable<Throwable> {
   /** オブジェクトの文字列表現を取得する。 */
   @Override
   public String toString() {
-    StringBuilder strBuff = new StringBuilder(100);
-    switch (kind) {
-      case CALL -> strBuff.append("   CALL");
-      case BATCH -> strBuff.append("   BATCH");
-      case SERVICE -> strBuff.append("   SERVICE");
-    }
-    strBuff.append(" [");
+    var builder = new StringBuilder(100);
+    builder.append("   ").append(kind);
+    builder.append(" [");
     if (start == null) {
-      strBuff.append("----/--/-- --:--:--.---");
+      builder.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(Constants.dateTimeFormater.format(start));
+      builder.append(Constants.dateTimeFormater.format(start));
     }
-    strBuff.append("]-[");
+    builder.append("]-[");
     if (end == null) {
-      strBuff.append("----/--/-- --:--:--.---");
+      builder.append("----/--/-- --:--:--.---");
     } else {
-      strBuff.append(Constants.dateTimeFormater.format(end));
+      builder.append(Constants.dateTimeFormater.format(end));
     }
-    strBuff.append("] ");
+    builder.append("] ");
     if (recoveryCount > 0 || finish) {
-      strBuff.append("(");
+      builder.append("(");
       if (finish) {
-        strBuff.append("E:");
+        builder.append("E:");
       }
-      strBuff.append(recoveryCount);
-      strBuff.append(") ");
+      builder.append(recoveryCount);
+      builder.append(") ");
     }
     if (params != null && params.length > 0) {
       for (int i = 0; i < params.length; i++) {
         if (i != 0) {
-          strBuff.append(" ");
+          builder.append(" ");
         }
-        strBuff.append(params[i]);
+        builder.append(params[i]);
       }
     }
-    strBuff.append("\r\n");
-    return strBuff.toString();
+    builder.append("\r\n");
+    return builder.toString();
   }
 
   public void shutdown() {
