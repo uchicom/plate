@@ -50,7 +50,7 @@ public class KeyInfo {
     this.porter = porter;
   }
 
-  private KeyState status = KeyState.DISABLE;
+  public KeyState status = KeyState.DISABLE;
 
   private RecoveryMethod recovery = RecoveryMethod.MANUAL;
 
