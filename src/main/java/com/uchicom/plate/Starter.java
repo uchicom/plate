@@ -2,7 +2,6 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.service.DateTimeService;
-import com.uchicom.plate.util.ThrowRunnable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -12,7 +11,7 @@ import java.time.LocalDateTime;
  *
  * @author Uchiyama Shigeki
  */
-public class Starter implements ThrowRunnable<Throwable> {
+public class Starter implements Runnable {
 
   private final DateTimeService dateTimeService = new DateTimeService();
   private KeyInfo startingKey;
@@ -62,11 +61,13 @@ public class Starter implements ThrowRunnable<Throwable> {
   }
 
   @Override
-  public void run() throws Throwable {
+  public void run() {
     if (start != null || !finish) {
       start = dateTimeService.getLocalDateTime();
       try {
         invoke(params);
+      } catch (Throwable t) {
+        stackTrace("Starter start error", t);
       } finally {
         end = dateTimeService.getLocalDateTime();
       }

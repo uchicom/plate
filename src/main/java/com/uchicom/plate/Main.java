@@ -125,14 +125,7 @@ public class Main {
   public void start(Starter starter) {
     // スターターがスタートしているのかのフラグ
     starter.setStarted(true);
-    exec.execute(
-        () -> {
-          try {
-            starter.run();
-          } catch (Throwable t) {
-            stackTrace("Starter start error", t);
-          }
-        });
+    exec.execute(starter);
   }
 
   /** キーを追加する。 */
@@ -157,13 +150,7 @@ public class Main {
   /** キーを呼び出す。 */
   public void callKey(String port, String key, String[] params) throws CmdException {
     checkPort(port);
-    keyAction(
-        key,
-        port,
-        startingKey -> {
-          Starter starter = startingKey.create(params, StarterKind.CALL);
-          start(starter);
-        });
+    keyAction(key, port, startingKey -> start(startingKey.create(params, StarterKind.CALL)));
   }
 
   public void shutdownKey(String port, String key, String[] params) throws CmdException {
