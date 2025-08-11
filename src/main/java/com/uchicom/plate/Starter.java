@@ -24,14 +24,6 @@ public class Starter implements ThrowRunnable<Throwable> {
 
   private final Main plate;
 
-  public String[] getParams() {
-    return params;
-  }
-
-  public void setParams(String[] params) {
-    this.params = params;
-  }
-
   private LocalDateTime start;
 
   private LocalDateTime end;
@@ -211,14 +203,6 @@ public class Starter implements ThrowRunnable<Throwable> {
     return startingKey;
   }
 
-  public void setStartingKey(KeyInfo startingKey) {
-    this.startingKey = startingKey;
-  }
-
-  public StarterKind getKind() {
-    return kind;
-  }
-
   public boolean isFinish() {
     return finish;
   }
@@ -227,12 +211,8 @@ public class Starter implements ThrowRunnable<Throwable> {
     this.finish = finish;
   }
 
-  public long getRecoveryCount() {
-    return recoveryCount;
-  }
-
-  public void setRecoveryCount(long recoveryCount) {
-    this.recoveryCount = recoveryCount;
+  public void incrementRecovery() {
+    recoveryCount++;
   }
 
   public void stackTrace(String message, Throwable t) {

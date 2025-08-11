@@ -188,10 +188,11 @@ public class Main {
             }
           }
           // 再起動処理
-          for (Starter starter : startingKey.getStarterList()) {
+          for (var starter : startingKey.getStarterList()) {
             if (!starter.isFinish()
-                && starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO) {
-              starter.setRecoveryCount(starter.getRecoveryCount() + 1);
+                && starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO
+                && starter.getStartingKey().status.isEnable()) {
+              starter.incrementRecovery();
               start(starter);
             } else {
               starter.setFinish(true);
@@ -314,8 +315,8 @@ public class Main {
       }
 
       servicePorter.build();
-      servicePorter
-          .getList()
+      servicePorter.getList().stream()
+          .filter(keyInfo -> keyInfo.status.isEnable())
           .forEach(
               keyInfo -> {
                 for (Starter starter : keyInfo.getStarterList()) {
