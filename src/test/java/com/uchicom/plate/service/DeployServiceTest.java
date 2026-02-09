@@ -9,6 +9,7 @@ import static org.mockito.Mockito.spy;
 
 import com.uchicom.plate.dto.DeployDto;
 import com.uchicom.plate.dto.DeployFileDto;
+import com.uchicom.plate.dto.ReleaseDto;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
@@ -46,17 +47,19 @@ public class DeployServiceTest {
   public void lsdl() {
     // mock
     var service = spy(new DeployService());
+    var releaseDto = new ReleaseDto();
     var dto = new DeployDto();
-    dto.dirPath = "/workspace/plate/release";
+    releaseDto.dirPath = "/workspace/plate/release";
+    releaseDto.deploy = dto;
     var file = mock(File.class);
 
-    doReturn(file).when(service).createFile(dto.dirPath);
+    doReturn(file).when(service).createFile(releaseDto.dirPath);
     doNothing()
         .when(service)
         .printFiles(levelCaptor.capture(), dirCaptor.capture(), stringBuilderCaptor.capture());
 
     // test
-    service.lsdl(dto);
+    service.lsdl(releaseDto);
 
     // assert
     assertEquals(0, levelCaptor.getValue());
@@ -71,8 +74,6 @@ public class DeployServiceTest {
     doReturn("name").when(dir).getName();
     doReturn(new File[0]).when(dir).listFiles();
     var builder = new StringBuilder();
-    var dto = new DeployDto();
-    dto.dirPath = "/workspace/plate/release";
 
     // test
     service.printFiles(0, dir, builder);
@@ -107,8 +108,10 @@ public class DeployServiceTest {
   public void deploy() throws Exception {
     // mock
     var service = spy(new DeployService());
+    var releaseDto = new ReleaseDto();
     var dto = new DeployDto();
-    dto.dirPath = "/workspace/plate/release";
+    releaseDto.dirPath = "/workspace/plate/release";
+    releaseDto.deploy = dto;
     var deployFileDto = new DeployFileDto();
     deployFileDto.from = "from";
     deployFileDto.to = "to";
@@ -116,7 +119,7 @@ public class DeployServiceTest {
     var tag = "vTest";
     var dir = mock(File.class);
     doReturn(true).when(dir).exists();
-    doReturn(dir).when(service).createFile(dto.dirPath, tag);
+    doReturn(dir).when(service).createFile(releaseDto.dirPath, tag);
     var fromFile = mock(File.class);
     doReturn(true).when(fromFile).exists();
     doReturn("name").when(fromFile).getName();
@@ -132,7 +135,7 @@ public class DeployServiceTest {
     doNothing().when(service).copy(fromPathCaptor.capture(), toPathCaptor.capture());
 
     // test
-    service.deploy(dto, tag);
+    service.deploy(releaseDto, tag);
 
     // assert
     assertEquals(fromPath, fromPathCaptor.getValue());

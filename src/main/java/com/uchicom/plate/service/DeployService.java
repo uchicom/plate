@@ -1,7 +1,7 @@
 // (C) 2023 uchicom
 package com.uchicom.plate.service;
 
-import com.uchicom.plate.dto.DeployDto;
+import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.exception.ServiceException;
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +13,8 @@ import java.util.List;
 
 public class DeployService {
 
-  public String lsdl(DeployDto dto) {
-    var root = createFile(dto.dirPath);
+  public String lsdl(ReleaseDto releaseDto) {
+    var root = createFile(releaseDto.dirPath);
     var builder = new StringBuilder(1024);
     printFiles(0, root, builder);
     return builder.toString();
@@ -39,11 +39,15 @@ public class DeployService {
     return builder;
   }
 
-  public boolean deploy(DeployDto dto, String tag) throws ServiceException {
-    var dir = createFile(dto.dirPath, tag);
+  public boolean deploy(ReleaseDto releaseDto, String tag) throws ServiceException {
+    if (releaseDto.deploy == null) {
+      throw new ServiceException("deploy設定は存在しません.");
+    }
+    var dir = createFile(releaseDto.dirPath, tag);
     if (!dir.exists()) {
       throw new ServiceException("ディレクトリが存在しません." + dir.getPath());
     }
+    var dto = releaseDto.deploy;
     // ファイル存在チェック
     for (var deployFile : dto.deployFiles) {
       var file = createFile(dir, deployFile.from);

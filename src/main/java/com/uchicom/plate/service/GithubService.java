@@ -1,7 +1,7 @@
 // (C) 2022 uchicom
 package com.uchicom.plate.service;
 
-import com.uchicom.plate.dto.GithubDto;
+import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
 import com.uchicom.plate.exception.ServiceException;
 import java.io.File;
@@ -17,14 +17,18 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class GithubService {
-  public String download(GithubDto dto, String tag) throws ServiceException {
+  public String download(ReleaseDto releaseDto, String tag) throws ServiceException {
+    if (releaseDto.github == null) {
+      throw new ServiceException("github設定は存在しません.");
+    }
     try {
-      var dir = createFile(dto.dirPath, tag);
+      var dir = createFile(releaseDto.dirPath, tag);
       if (!dir.exists()) {
         if (!dir.mkdirs()) {
           throw new ServiceException("ディレクトリ作成に失敗しました." + dir.getPath());
         }
       }
+      var dto = releaseDto.github;
       var list = new ArrayList<Path>();
       for (var downloadFile : dto.downloadFiles) {
         switch (downloadFile.kind) {

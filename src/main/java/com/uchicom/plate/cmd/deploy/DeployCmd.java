@@ -35,11 +35,12 @@ public class DeployCmd extends AbstractCmd {
     var key = params[0];
     var tag = params[1];
     var config = broker.getMain().getConfig();
-    if (!config.deploy.containsKey(key)) {
-      throw new CmdException("deploy key:" + key + "は設定されていません.");
+    var release = config.release.get(key);
+    if (release == null) {
+      throw new CmdException("release key:" + key + "は設定されていません.");
     }
     try {
-      deployService.deploy(config.deploy.get(key), tag);
+      deployService.deploy(release, tag);
       return null;
     } catch (ServiceException e) {
       throw new CmdException(e);
