@@ -28,10 +28,10 @@ public class GithubService {
       var list = new ArrayList<Path>();
       for (var downloadFile : dto.downloadFiles) {
         switch (downloadFile.kind) {
-          case ASSETS -> list.addAll(
-              downloadAssets(dto.token, dir, dto.repos, downloadFile.filter, tag));
-          case TARBALL, ZIPBALL -> list.add(
-              downloadFile(dto.token, dir, dto.repos, downloadFile.kind, tag));
+          case ASSETS ->
+              list.addAll(downloadAssets(dto.token, dir, dto.repos, downloadFile.filter, tag));
+          case TARBALL, ZIPBALL ->
+              list.add(downloadFile(dto.token, dir, dto.repos, downloadFile.kind, tag));
           default -> {}
         }
       }
