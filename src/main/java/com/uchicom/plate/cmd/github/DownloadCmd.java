@@ -39,8 +39,7 @@ public class DownloadCmd extends AbstractCmd {
       throw new CmdException("github key:" + key + "は設定されていません.");
     }
     try {
-      githubService.download(config.github.get(key), tag);
-      return null;
+      return githubService.download(config.github.get(key), tag);
     } catch (ServiceException e) {
       throw new CmdException(e);
     }
