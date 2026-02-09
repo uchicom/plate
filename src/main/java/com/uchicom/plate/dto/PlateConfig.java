@@ -8,6 +8,5 @@ public class PlateConfig {
   public String hash;
   public ServiceDto service;
   public BatchDto batch;
-  public Map<String, GithubDto> github;
-  public Map<String, DeployDto> deploy;
+  public Map<String, ReleaseDto> release;
 }

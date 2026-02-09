@@ -8,6 +8,7 @@ import static org.mockito.Mockito.spy;
 
 import com.uchicom.plate.dto.DownloadFileDto;
 import com.uchicom.plate.dto.GithubDto;
+import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
 import java.io.File;
 import java.nio.file.Path;
@@ -45,9 +46,10 @@ public class GithubServiceTest {
   public void downloadJar() throws Exception {
     // mock
     var service = spy(new GithubService());
+    var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";
-    dto.dirPath = "/workspace/plate/release";
+    releaseDto.dirPath = "/workspace/plate/release";
     dto.repos = "uchicom/smtp";
     dto.downloadFiles = new ArrayList<>();
 
@@ -55,11 +57,12 @@ public class GithubServiceTest {
     downloadFileDto.kind = DownloadFileKind.ASSETS;
     downloadFileDto.filter = "[^\"]+.jar";
     dto.downloadFiles.add(downloadFileDto);
+    releaseDto.github = dto;
 
     var tag = "0.1.14";
 
     var dir = mock(File.class);
-    doReturn(dir).when(service).createFile(dto.dirPath, tag);
+    doReturn(dir).when(service).createFile(releaseDto.dirPath, tag);
     doReturn(true).when(dir).exists();
     var path = mock(Path.class);
     var file = mock(File.class);
@@ -74,7 +77,7 @@ public class GithubServiceTest {
             tagCaptor.capture());
 
     // test
-    service.download(dto, tag);
+    service.download(releaseDto, tag);
 
     // assert
     assertEquals(dto.token, tokenCaptor.getValue());
@@ -88,19 +91,21 @@ public class GithubServiceTest {
   public void downloadZip() throws Exception {
     // mock
     var service = spy(new GithubService());
+    var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";
-    dto.dirPath = "/workspace/plate/release";
+    releaseDto.dirPath = "/workspace/plate/release";
     dto.repos = "uchicom/smtp";
     dto.downloadFiles = new ArrayList<>();
     var downloadFileDto = new DownloadFileDto();
     downloadFileDto.kind = DownloadFileKind.ZIPBALL;
     dto.downloadFiles.add(downloadFileDto);
+    releaseDto.github = dto;
 
     var tag = "0.1.14";
 
     var dir = mock(File.class);
-    doReturn(dir).when(service).createFile(dto.dirPath, tag);
+    doReturn(dir).when(service).createFile(releaseDto.dirPath, tag);
     doReturn(true).when(dir).exists();
     var path = mock(Path.class);
     var file = mock(File.class);
@@ -114,7 +119,7 @@ public class GithubServiceTest {
             kindCaptor.capture(),
             tagCaptor.capture());
 
-    service.download(dto, tag);
+    service.download(releaseDto, tag);
 
     // assert
     assertEquals(dto.token, tokenCaptor.getValue());
@@ -128,19 +133,21 @@ public class GithubServiceTest {
   public void downloadTar() throws Exception {
     // mock
     var service = spy(new GithubService());
+    var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";
-    dto.dirPath = "/workspace/plate/release";
+    releaseDto.dirPath = "/workspace/plate/release";
     dto.repos = "uchicom/smtp";
     dto.downloadFiles = new ArrayList<>();
     var downloadFileDto = new DownloadFileDto();
     downloadFileDto.kind = DownloadFileKind.TARBALL;
     dto.downloadFiles.add(downloadFileDto);
+    releaseDto.github = dto;
 
     var tag = "0.1.14";
 
     var dir = mock(File.class);
-    doReturn(dir).when(service).createFile(dto.dirPath, tag);
+    doReturn(dir).when(service).createFile(releaseDto.dirPath, tag);
     doReturn(true).when(dir).exists();
     var path = mock(Path.class);
     var file = mock(File.class);
@@ -155,7 +162,7 @@ public class GithubServiceTest {
             tagCaptor.capture());
 
     // test
-    service.download(dto, tag);
+    service.download(releaseDto, tag);
 
     // assert
     assertEquals(dto.token, tokenCaptor.getValue());

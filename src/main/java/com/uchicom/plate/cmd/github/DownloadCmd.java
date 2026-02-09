@@ -35,11 +35,12 @@ public class DownloadCmd extends AbstractCmd {
     var key = params[0];
     var tag = params[1];
     var config = broker.getMain().getConfig();
-    if (!config.github.containsKey(key)) {
-      throw new CmdException("github key:" + key + "は設定されていません.");
+    var release = config.release.get(key);
+    if (release == null) {
+      throw new CmdException("release key:" + key + "は設定されていません.");
     }
     try {
-      return githubService.download(config.github.get(key), tag);
+      return githubService.download(release, tag);
     } catch (ServiceException e) {
       throw new CmdException(e);
     }

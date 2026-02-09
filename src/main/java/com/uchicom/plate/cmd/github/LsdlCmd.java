@@ -33,10 +33,11 @@ public class LsdlCmd extends AbstractCmd {
   public String execute(CmdSocketHandler handler, String[] params) throws CmdException {
     var key = params[0];
     var config = broker.getMain().getConfig();
-    if (!config.deploy.containsKey(key)) {
-      throw new CmdException("deploy key:" + key + "は設定されていません.");
+    var release = config.release.get(key);
+    if (release == null) {
+      throw new CmdException("release key:" + key + "は設定されていません.");
     }
-    return deployService.lsdl(config.deploy.get(key));
+    return deployService.lsdl(release);
   }
 
   @Override

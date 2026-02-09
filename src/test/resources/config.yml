@@ -28,30 +28,30 @@ batch:
         day:
         month:
         dayOfWeek: #未対応 スケジュールする際に
-github:
+release:
   hoge:
-    token: <github_token>
-    repos: uchicom/plate
     dirPath: release
-    downloadFiles:
-      - kind: ASSETS
-        filter: ".*.jar"
-      - kind: ZIPBALL
-      - kind: TARBALL
+    github:
+      token: <github_token>
+      repos: uchicom/plate
+      downloadFiles:
+        - kind: ASSETS
+          filter: ".*.jar"
+        - kind: ZIPBALL
+        - kind: TARBALL
+    deploy:
+      deployFiles:
+        - from: /*.jar # 単純移動
+          to: hoge/lib/
+        - from: /*.tar.gz
+          decompress: "*/www/*" #アーカイブファイルを展開してフィルタリングする
+          to: hoge/www/
   hoge2:
-    repos: uchicom/plate
     dirPath: release
-    downloadFiles:
-      - kind: ASSETS
-        filter: ".*.jar"
-      - kind: ZIPBALL
-      - kind: TARBALL
-deploy:
-  hoge:
-    dirPath: release
-    deployFiles:
-      - from: /*.jar # 単純移動
-        to: hoge/lib/
-      - from: /*.tar.gz
-        decompress: "*/www/*" #アーカイブファイルを展開してフィルタリングする
-        to: hoge/www/
+    github:
+      repos: uchicom/plate
+      downloadFiles:
+        - kind: ASSETS
+          filter: ".*.jar"
+        - kind: ZIPBALL
+        - kind: TARBALL
