@@ -28,7 +28,7 @@ public abstract class AbstractCmd {
   /**
    * コマンドのメイン処理
    *
-   * @return コマンドが正常に完了した場合はtrue,それ以外はfalse
+   * @return メッセージ出力する場合に設定
    */
   public abstract String execute(CmdSocketHandler handler, String[] params) throws CmdException;
 
@@ -38,9 +38,9 @@ public abstract class AbstractCmd {
    * @return 認証の結果OKの場合はtrue,それ以外はfalse
    */
   public boolean checkAuth(CmdSocketHandler handler) {
-    return broker.getMain().getUser() == null
+    return (broker.getMain().getUser() == null
             && handler.getUser() != null
-            && handler.getPass() != null
+            && handler.getPass() != null)
         || (handler.getUser() != null
             && handler.getUser().equals(broker.getMain().getUser())
             && (handler.getPass() != null
