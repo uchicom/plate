@@ -31,6 +31,9 @@ batch:
 release:
   hoge:
     dirPath: release
+    auto: 
+      detect: ^hoge_(v[0-9]{8}-[0-9]{6}).rel$
+      service: server1
     github:
       token: <github_token>
       repos: uchicom/plate
@@ -48,6 +51,8 @@ release:
           to: hoge/www/
   hoge2:
     dirPath: release
+    auto: 
+      detect: hoge2_(v[0-9]{8}-[0-9]{6}).rel
     github:
       repos: uchicom/plate
       downloadFiles:
