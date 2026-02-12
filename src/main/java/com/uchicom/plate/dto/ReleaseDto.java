@@ -4,6 +4,7 @@ package com.uchicom.plate.dto;
 public class ReleaseDto {
 
   public String dirPath;
+  public AutoDto auto;
   public GithubDto github;
   public DeployDto deploy;
 }

@@ -3,6 +3,7 @@ package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
 import com.uchicom.plate.dto.PlateConfig;
+import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.enumeration.CpState;
 import com.uchicom.plate.enumeration.KeyState;
 import com.uchicom.plate.enumeration.RecoveryMethod;
@@ -10,6 +11,8 @@ import com.uchicom.plate.exception.CmdException;
 import com.uchicom.plate.factory.di.DIFactory;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.scheduler.ScheduleFactory;
+import com.uchicom.plate.service.DeployService;
+import com.uchicom.plate.service.GithubService;
 import com.uchicom.plate.util.Crypt;
 import com.uchicom.util.Parameter;
 import com.uchicom.util.ThrowingConsumer;
@@ -18,7 +21,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Kind;
+import java.nio.file.WatchEvent.Modifier;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -31,6 +42,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -82,10 +95,20 @@ public class Main {
 
   private final ScheduleFactory scheduleFactory;
 
+  private final GithubService githubService;
+
+  private final DeployService deployService;
+
   private final Logger logger;
 
-  public Main(ScheduleFactory scheduleFactory, Logger logger) {
+  public Main(
+      ScheduleFactory scheduleFactory,
+      GithubService githubService,
+      DeployService deployService,
+      Logger logger) {
     this.scheduleFactory = scheduleFactory;
+    this.githubService = githubService;
+    this.deployService = deployService;
     this.logger = logger;
   }
 
@@ -362,6 +385,94 @@ public class Main {
                 });
       }
       batchPorter.build();
+    }
+    watchReleaseDir(config.release);
+  }
+
+  void watchReleaseDir(Map<String, ReleaseDto> releaseDtoMap) {
+    if (releaseDtoMap == null) {
+      return;
+    }
+    if (releaseDtoMap.isEmpty()) {
+      return;
+    }
+    var autoReleaseList =
+        releaseDtoMap.entrySet().stream()
+            .map(entry -> entry.getValue())
+            .filter(releaseDto -> releaseDto.auto != null && releaseDto.auto.detect != null)
+            .collect(Collectors.toList());
+    if (autoReleaseList.isEmpty()) {
+      return;
+    }
+    var watchPathList =
+        autoReleaseList.stream().map(releaseDto -> releaseDto.dirPath).distinct().toList();
+    Thread thread =
+        new Thread(
+            () -> {
+              try (WatchService service = FileSystems.getDefault().newWatchService()) {
+                var watchKeyPathMap = new HashMap<WatchKey, String>();
+                for (var watchPath : watchPathList) {
+                  var path = Path.of(watchPath);
+                  watchKeyPathMap.put(
+                      path.register(
+                          service,
+                          new Kind[] {StandardWatchEventKinds.ENTRY_CREATE},
+                          new Modifier[] {}),
+                      watchPath);
+                }
+                WatchKey key = null;
+                while ((key = service.take()) != null) {
+                  if (!key.isValid()) continue;
+                  for (WatchEvent<?> event : key.pollEvents()) {
+                    if (StandardWatchEventKinds.OVERFLOW.equals(event.kind())) continue;
+                    // eventではファイル名しかとれない
+                    var file = (Path) event.context();
+                    var watchPath = watchKeyPathMap.get(key);
+                    release(watchPath, file, autoReleaseList);
+                  }
+                  boolean valid = key.reset();
+                  if (!valid) {
+                    System.out.println("reset == false");
+                  }
+                }
+              } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+              } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+              }
+            });
+    thread.setDaemon(false); // mainスレッドと運命を共に
+    thread.start();
+  }
+
+  void release(String watchPath, Path filePath, List<ReleaseDto> autoReleaseList) {
+    for (var releaseDto : autoReleaseList) {
+      if (!watchPath.equals(releaseDto.dirPath)) {
+        continue;
+      }
+      var pattern = Pattern.compile(releaseDto.auto.detect);
+      var filePathString = watchPath + "/" + filePath.toString();
+      var matcher = pattern.matcher(filePath.toString());
+      if (!matcher.find()) {
+        continue;
+      }
+      var tag = matcher.group(1);
+      try {
+        var result = githubService.download(releaseDto, tag);
+        if (result != null) {
+          logger.info(result);
+        }
+        deployService.deploy(releaseDto, tag);
+        if (releaseDto.auto.service != null) {
+          // 再起動する
+          shutdownKey("service", releaseDto.auto.service, new String[0]);
+        }
+      } catch (Exception e) {
+        var file = Path.of(filePathString).toFile();
+        file.renameTo(new File(file.getParent(), "ERR_" + file.getName()));
+      }
     }
   }
 

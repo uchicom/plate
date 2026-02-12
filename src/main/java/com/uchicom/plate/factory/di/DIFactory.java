@@ -6,6 +6,8 @@ import com.uchicom.plate.logging.DailyRollingFileHandler;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.scheduler.cron.CronParser;
 import com.uchicom.plate.service.DateTimeService;
+import com.uchicom.plate.service.DeployService;
+import com.uchicom.plate.service.GithubService;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -14,7 +16,7 @@ import java.util.stream.Stream;
 public class DIFactory {
 
   public static Main main() {
-    return new Main(scheduleFactory(), logger());
+    return new Main(scheduleFactory(), githubService(), deployService(), logger());
   }
 
   static ScheduleFactory scheduleFactory() {
@@ -23,6 +25,14 @@ public class DIFactory {
 
   static DateTimeService dateTimeService() {
     return new DateTimeService();
+  }
+
+  static DeployService deployService() {
+    return new DeployService();
+  }
+
+  static GithubService githubService() {
+    return new GithubService();
   }
 
   static CronParser cronParser() {
