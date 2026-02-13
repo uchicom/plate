@@ -613,7 +613,7 @@ public class Main {
   }
 
   public void stackTrace(String message, Throwable t) {
-    logger.log(Level.SEVERE, message, 5);
+    logger.log(Level.SEVERE, message, t);
   }
 
   public void info(String message) {
