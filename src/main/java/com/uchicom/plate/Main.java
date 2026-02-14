@@ -192,20 +192,14 @@ public class Main {
                 } else {
                   starter.shutdown(params);
                 }
+                if (starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO
+                    && starter.getStartingKey().status.isEnable()) {
+                  starter.incrementRecovery();
+                  start(starter);
+                }
               } catch (Exception e) {
                 throw new CmdException(e);
               }
-            }
-          }
-          // 再起動処理
-          for (var starter : startingKey.getStarterList()) {
-            if (!starter.isFinish()
-                && starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO
-                && starter.getStartingKey().status.isEnable()) {
-              starter.incrementRecovery();
-              start(starter);
-            } else {
-              starter.setFinish(true);
             }
           }
         });
