@@ -195,6 +195,7 @@ public class Main {
                 if (starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO
                     && starter.getStartingKey().status.isEnable()) {
                   starter.incrementRecovery();
+                  starter.getStartingKey().build();
                   start(starter);
                 }
               } catch (Exception e) {
