@@ -219,4 +219,8 @@ public class Starter implements Runnable {
   public void stackTrace(String message, Throwable t) {
     plate.stackTrace(message, t);
   }
+
+  public String[] getParams() {
+    return params;
+  }
 }

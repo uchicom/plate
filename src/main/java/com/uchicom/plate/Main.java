@@ -183,6 +183,7 @@ public class Main {
         key,
         port,
         startingKey -> {
+          String[] lastStartParams = null;
           // 停止処理
           for (Starter starter : startingKey.getStarterList()) {
             if (!starter.isFinish()) {
@@ -192,16 +193,16 @@ public class Main {
                 } else {
                   starter.shutdown(params);
                 }
-                if (starter.getStartingKey().getRecovery() == RecoveryMethod.AUTO
-                    && starter.getStartingKey().status.isEnable()) {
-                  starter.incrementRecovery();
-                  starter.getStartingKey().build();
-                  start(starter);
-                }
+                lastStartParams = starter.getParams();
               } catch (Exception e) {
                 throw new CmdException(e);
               }
             }
+          }
+          startingKey.getStarterList().clear();
+          if (startingKey.getRecovery() == RecoveryMethod.AUTO && startingKey.status.isEnable()) {
+            startingKey.build();
+            start(startingKey.create(lastStartParams, StarterKind.SERVICE));
           }
         });
   }
