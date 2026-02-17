@@ -187,4 +187,12 @@ public class KeyInfo {
     builder.append("\r\n");
     return builder.toString();
   }
+
+  /** クラスをロードする。 */
+  public Class<?> loadClass() throws ClassNotFoundException {
+    if (classLoader == null) {
+      return porter.loadClass(className);
+    }
+    return classLoader.loadClass(className);
+  }
 }
