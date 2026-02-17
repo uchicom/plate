@@ -4,7 +4,10 @@ package com.uchicom.plate;
 import com.uchicom.plate.service.DateTimeService;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.logging.LogManager;
 
 /**
  * 起動クラス
@@ -189,15 +192,46 @@ public class Starter implements Runnable {
           InvocationTargetException,
           SecurityException,
           NoSuchMethodException {
-    if (startingKey.getClassLoader() != null) {
-      Thread.currentThread().setContextClassLoader(startingKey.getClassLoader());
-      classObject = startingKey.getClassLoader().loadClass(startingKey.getClassName());
-    } else {
-      Thread.currentThread().setContextClassLoader(startingKey.getPorter().getClassLoader());
-      classObject = startingKey.getPorter().loadClass(startingKey.getClassName());
-    }
-    Method method = classObject.getMethod(methodName, new Class[] {String[].class});
+    classObject = startingKey.loadClass();
+    var method = classObject.getMethod(methodName, new Class[] {String[].class});
     method.invoke(classObject, new Object[] {params});
+    clearLog(classObject.getClassLoader());
+    clearDriver(classObject.getClassLoader());
+  }
+
+  void clearLog(ClassLoader pluginCl) {
+    var logManager = LogManager.getLogManager();
+    var names = logManager.getLoggerNames();
+
+    while (names.hasMoreElements()) {
+      var name = names.nextElement();
+      var logger = logManager.getLogger(name);
+      if (logger == null) {
+        continue;
+      }
+      for (var h : logger.getHandlers()) {
+        ClassLoader cl = h.getClass().getClassLoader();
+        if (cl != pluginCl) {
+          continue;
+        }
+        h.close();
+        logger.removeHandler(h);
+      }
+    }
+  }
+
+  void clearDriver(ClassLoader classLoader) {
+    var drivers = DriverManager.getDrivers();
+    while (drivers.hasMoreElements()) {
+      var d = drivers.nextElement();
+      if (d.getClass().getClassLoader() == classLoader) {
+        try {
+          DriverManager.deregisterDriver(d);
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+    }
   }
 
   public KeyInfo getStartingKey() {
