@@ -55,11 +55,11 @@ mvn exec:java "-Dexec.mainClass=com.uchicom.plate.Main" "-Dexec.args=-file src/t
 ## コーディング規約
 
 - **フォーマッター**: Spotless + Google Java Format 1.28.0
-  - コードを変更したら必ず `mvn spotless:apply` を実行すること
-  - フォーマットが合っていないと `mvn verify` が失敗する
+- コードを変更したら必ず `mvn spotless:apply` を実行すること
+- フォーマットが合っていないと `mvn verify` が失敗する
 - **静的解析**: Error Prone（コンパイル時に自動チェック）
 - **ライセンスヘッダー**: 各Javaファイルの先頭に `// (C) $YEAR uchicom` が必要
-  - Spotlessが自動付与するため、手動で追加しない
+- Spotlessが自動付与するため、手動で追加しない
 - **インポート**: 未使用インポートはSpotlessが自動削除する
 
 ## パッケージ構成
