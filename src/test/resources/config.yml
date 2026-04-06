@@ -1,5 +1,5 @@
-user: testUser
-hash: testPassword
+user: sige
+hash: xcfGwELO
 service:
   services:
     - key: server1 # require
@@ -44,10 +44,10 @@ release:
         - kind: TARBALL
     deploy:
       deployFiles:
-        - from: /*.jar # 単純移動
+        - from: "test1.jar" # 単純移動
           to: hoge/lib/
-        - from: /*.tar.gz
-          decompress: "*/www/*" #アーカイブファイルを展開してフィルタリングする
+        - from: "test1.zip" # アーカイブ展開
+          decompress: "glob:**test.htm" #アーカイブファイルを展開してフィルタリングする
           to: hoge/www/
   hoge2:
     dirPath: release
