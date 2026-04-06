@@ -45,12 +45,12 @@ public class MainTest extends AbstractTest {
     assertThat(actual.release.get("hoge").github).isNotNull();
     assertThat(actual.release.get("hoge").deploy).isNotNull();
     assertThat(actual.release.get("hoge").deploy.deployFiles).hasSize(2);
-    assertThat(actual.release.get("hoge").deploy.deployFiles.get(0).from).isEqualTo("/*.jar");
+    assertThat(actual.release.get("hoge").deploy.deployFiles.get(0).from).isEqualTo("test1.jar");
     assertThat(actual.release.get("hoge").deploy.deployFiles.get(0).decompress).isNull();
     assertThat(actual.release.get("hoge").deploy.deployFiles.get(0).to).isEqualTo("hoge/lib/");
-    assertThat(actual.release.get("hoge").deploy.deployFiles.get(1).from).isEqualTo("/*.tar.gz");
+    assertThat(actual.release.get("hoge").deploy.deployFiles.get(1).from).isEqualTo("test1.zip");
     assertThat(actual.release.get("hoge").deploy.deployFiles.get(1).decompress)
-        .isEqualTo("*/www/*");
+        .isEqualTo("glob:**test.htm");
     assertThat(actual.release.get("hoge").deploy.deployFiles.get(1).to).isEqualTo("hoge/www/");
   }
 }
