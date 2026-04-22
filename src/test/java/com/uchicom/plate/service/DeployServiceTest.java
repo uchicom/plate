@@ -133,8 +133,7 @@ public class DeployServiceTest {
     doReturn(true).when(dir).exists();
     doReturn(dir).when(service).createFile(releaseDto.dirPath, tag);
     var fromFile = mock(File.class);
-    doReturn(true).when(fromFile).exists();
-    doReturn(fromFile).when(service).createFile(dir, deployFileDto.from);
+    doReturn(List.of(fromFile)).when(service).matchFiles(dir, deployFileDto.from);
     var toDir = mock(File.class);
     doReturn(toDir).when(service).createFile(deployFileDto.to);
     doNothing().when(service).deployFile(fromFile, null, toDir);

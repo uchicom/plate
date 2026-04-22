@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
@@ -57,16 +59,25 @@ public class DeployService {
     var dto = releaseDto.deploy;
     // ファイル存在チェック
     for (var deployFile : dto.deployFiles) {
-      var file = createFile(dir, deployFile.from);
-      if (!file.exists()) {
-        throw new ServiceException("ファイルが存在しません." + dir.getPath() + "/" + deployFile.from);
+      try {
+        var files = matchFiles(dir, deployFile.from);
+        if (files.isEmpty()) {
+          throw new ServiceException("ファイルが存在しません." + dir.getPath() + "/" + deployFile.from);
+        }
+      } catch (IOException e) {
+        throw new ServiceException(e);
       }
     }
     // ファイル配置
     for (var deployFile : dto.deployFiles) {
-      var fromFile = createFile(dir, deployFile.from);
       var toDir = createFile(deployFile.to);
-      deployFile(fromFile, deployFile.decompress, toDir);
+      try {
+        for (var fromFile : matchFiles(dir, deployFile.from)) {
+          deployFile(fromFile, deployFile.decompress, toDir);
+        }
+      } catch (IOException e) {
+        throw new ServiceException(e);
+      }
     }
     return true;
   }
@@ -162,6 +173,19 @@ public class DeployService {
     var s = new String(buf, offset, length, StandardCharsets.UTF_8);
     int idx = s.indexOf('\0');
     return (idx >= 0 ? s.substring(0, idx) : s).trim();
+  }
+
+  List<File> matchFiles(File dir, String from) throws IOException {
+    var matcher = FileSystems.getDefault().getPathMatcher(from);
+    var dirPath = dir.toPath();
+    try (var stream = Files.walk(dirPath)) {
+      return stream
+          .filter(p -> !p.equals(dirPath))
+          .filter(p -> matcher.matches(dirPath.relativize(p)))
+          .map(Path::toFile)
+          .filter(File::isFile)
+          .collect(Collectors.toList());
+    }
   }
 
   File createFile(String parent, String child) {
