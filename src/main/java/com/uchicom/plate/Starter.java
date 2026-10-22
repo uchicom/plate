@@ -194,7 +194,15 @@ public class Starter implements Runnable {
           NoSuchMethodException {
     classObject = startingKey.loadClass();
     var method = classObject.getMethod(methodName, new Class[] {String[].class});
-    method.invoke(classObject, new Object[] {params});
+    var thread = Thread.currentThread();
+    var originalClassLoader = thread.getContextClassLoader();
+    // SnakeYAMLなどがコンテキストクラスローダでクラス解決するため、呼び出し先のクラスローダを設定する
+    thread.setContextClassLoader(classObject.getClassLoader());
+    try {
+      method.invoke(classObject, new Object[] {params});
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
     clearLog(classObject.getClassLoader());
     clearDriver(classObject.getClassLoader());
   }
