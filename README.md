@@ -127,47 +127,47 @@ save config.yml
 user: admin          # 認証ユーザー
 hash: xxxxxxxx       # パスワードのハッシュ（save / cpassで更新される）
 service:
-services:
-	- key: server1                     # 必須
-	className: com.uchicom.hoge.Main # 必須
-	method:
-		startup: main                  # 既定 main
-		shutdown: shutdown
-	parameters: [a, b, c, d]
-	disabled: false                  # 既定 false
-	recovery: true                   # 既定 true
-	order:
-		startup: 1                     # 起動順。既定 0
-		shutdown: 1                    # 停止順。既定 0
+	services:
+		- key: server1                     # 必須
+		className: com.uchicom.hoge.Main # 必須
+		method:
+			startup: main                  # 既定 main
+			shutdown: shutdown
+		parameters: [a, b, c, d]
+		disabled: false                  # 既定 false
+		recovery: true                   # 既定 true
+		order:
+			startup: 1                     # 起動順。既定 0
+			shutdown: 1                    # 停止順。既定 0
 batch:
-batches:
-	- key: batch1                      # 必須
-	className: com.uchicom.hoge.Main # 必須
-	method:
-		startup: main
-	parameters: [a, b, c, d]
-	disabled: false
-	schedule:
-		cron: 1 2 3 4 5                # cron形式
+	batches:
+		- key: batch1                      # 必須
+		className: com.uchicom.hoge.Main # 必須
+		method:
+			startup: main
+		parameters: [a, b, c, d]
+		disabled: false
+		schedule:
+			cron: 1 2 3 4 5                # cron形式
 release:
-hoge:
-	dirPath: release                   # ダウンロード先
-	auto:
-	detect: ^hoge_(v[0-9]{8}-[0-9]{6}).rel$  # 検知するファイル名
-	service: server1                 # 検知したときに対象とするサービス
-	github:
-	token: <github_token>
-	repos: uchicom/plate
-	downloadFiles:
-		- kind: ASSETS                 # ASSETS / ZIPBALL / TARBALL
-		filter: ".*.jar"
-	deploy:
-	deployFiles:
-		- from: "glob:test1.jar"       # 単純移動
-		to: hoge/lib/
-		- from: "glob:test1.zip"       # アーカイブを展開して配備
-		decompress: "glob:**test.htm"
-		to: hoge/www/
+	hoge:
+		dirPath: release                   # ダウンロード先
+		auto:
+		detect: ^hoge_(v[0-9]{8}-[0-9]{6}).rel$  # 検知するファイル名
+		service: server1                 # 検知したときに対象とするサービス
+		github:
+		token: <github_token>
+		repos: uchicom/plate
+		downloadFiles:
+			- kind: ASSETS                 # ASSETS / ZIPBALL / TARBALL
+			filter: ".*.jar"
+		deploy:
+		deployFiles:
+			- from: "glob:test1.jar"       # 単純移動
+			to: hoge/lib/
+			- from: "glob:test1.zip"       # アーカイブを展開して配備
+			decompress: "glob:**test.htm"
+			to: hoge/www/
 ```
 
 `schedule` の `minute`、`hour`、`day`、`month` による個別指定もサンプルにありますが、`dayOfWeek` は未対応です。
