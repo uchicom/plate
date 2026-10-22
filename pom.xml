@@ -164,7 +164,7 @@
             <importOrder/>
             <removeUnusedImports/>
             <googleJavaFormat>
-              <version>1.28.0</version>
+              <version>1.30.0</version>
               <style>GOOGLE</style>
             </googleJavaFormat>
             <licenseHeader>
