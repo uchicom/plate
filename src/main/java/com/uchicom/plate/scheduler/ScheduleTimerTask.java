@@ -21,7 +21,12 @@ public class ScheduleTimerTask extends TimerTask {
     } catch (Throwable t) {
       starter.stackTrace("Starter run error", t);
     } finally {
-      schedule.register();
+      try {
+        schedule.register();
+      } catch (Throwable t) {
+        // Timerスレッドを死なせない
+        starter.stackTrace("Schedule register error", t);
+      }
     }
   }
 }
