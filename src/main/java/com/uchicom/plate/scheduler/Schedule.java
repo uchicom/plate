@@ -14,6 +14,8 @@ public class Schedule {
   Timer timer;
   Starter starter;
   ZonedDateTime nextDateTime;
+  volatile ScheduleTimerTask timerTask;
+  volatile boolean cancelled;
 
   public Schedule(Cron cron, LocalDateTime now) {
     this.cron = cron;
@@ -31,7 +33,24 @@ public class Schedule {
   }
 
   void register(ScheduleTimerTask timerTask) {
+    if (cancelled) {
+      return;
+    }
+    this.timerTask = timerTask;
     timer.schedule(timerTask, nextDate());
+  }
+
+  /** スケジュールを取り消し、以降の再登録も行わない。 */
+  public void cancel() {
+    cancelled = true;
+    var task = timerTask;
+    if (task != null) {
+      task.cancel();
+    }
+  }
+
+  public boolean isCancelled() {
+    return cancelled;
   }
 
   Date nextDate() {

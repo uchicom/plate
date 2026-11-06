@@ -67,12 +67,14 @@ public class Starter implements Runnable {
   public void run() {
     if (start != null || !finish) {
       start = dateTimeService.getLocalDateTime();
+      finish = false;
       try {
         invoke(params);
       } catch (Throwable t) {
         stackTrace("Starter start error", t);
       } finally {
         end = dateTimeService.getLocalDateTime();
+        finish = true;
       }
     }
   }
@@ -120,7 +122,11 @@ public class Starter implements Runnable {
       end = dateTimeService.getLocalDateTime();
       finish = true;
     } else if (!finish) {
-      if (startingKey.shutdownMethodName != null) {
+      if (startingKey.shutdownMethodName == null || classObject == null) {
+        // 停止メソッド未設定、または起動前(クラス未ロード)は呼び出せないため終了扱いにする
+        end = dateTimeService.getLocalDateTime();
+        finish = true;
+      } else {
         try {
           Method method = classObject.getMethod(startingKey.shutdownMethodName);
           method.invoke(classObject);
@@ -152,7 +158,10 @@ public class Starter implements Runnable {
       end = dateTimeService.getLocalDateTime();
       finish = true;
     } else if (!finish) {
-      if (startingKey.shutdownMethodName != null) {
+      if (startingKey.shutdownMethodName == null || classObject == null) {
+        end = dateTimeService.getLocalDateTime();
+        finish = true;
+      } else {
         try {
           Method method =
               classObject.getMethod(startingKey.shutdownMethodName, new Class[] {String[].class});
@@ -202,9 +211,9 @@ public class Starter implements Runnable {
       method.invoke(classObject, new Object[] {params});
     } finally {
       thread.setContextClassLoader(originalClassLoader);
+      clearLog(classObject.getClassLoader());
+      clearDriver(classObject.getClassLoader());
     }
-    clearLog(classObject.getClassLoader());
-    clearDriver(classObject.getClassLoader());
   }
 
   void clearLog(ClassLoader pluginCl) {

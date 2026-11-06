@@ -12,6 +12,9 @@ import org.mockito.Mock;
 
 public class MainTest extends AbstractTest {
   @Mock ScheduleFactory scheduleFactory;
+  @Mock com.uchicom.plate.service.DeployService deployService;
+  @Mock com.uchicom.plate.service.GithubService githubService;
+  @Mock java.util.logging.Logger logger;
 
   @InjectMocks Main main;
 
@@ -70,5 +73,108 @@ public class MainTest extends AbstractTest {
   @Test
   public void shutdownWithoutPort() {
     main.shutdown();
+  }
+
+  @Test
+  public void starterFinishesAfterRun() {
+    main.addKey("key1", "com.uchicom.plate.NoSuchClass", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    var starter = keyInfo.create(new String[0], Starter.StarterKind.CALL);
+    starter.setStarted(true);
+    assertThat(starter.isAlive()).isTrue();
+
+    starter.run();
+
+    assertThat(starter.isFinish()).isTrue();
+    assertThat(starter.isAlive()).isFalse();
+    main.purge();
+    assertThat(keyInfo.getStarterList()).isEmpty();
+  }
+
+  @Test
+  public void shutdownBeforeClassLoadedOrWithoutShutdownMethod() {
+    main.addKey("key1", "com.uchicom.plate.NoSuchClass", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    var starter = keyInfo.create(new String[0], Starter.StarterKind.SERVICE);
+    starter.setStarted(true);
+    keyInfo.shutdownMethodName = "shutdown";
+
+    starter.shutdown();
+
+    assertThat(starter.isFinish()).isTrue();
+
+    var starter2 = keyInfo.create(new String[0], Starter.StarterKind.SERVICE);
+    starter2.setStarted(true);
+    keyInfo.shutdownMethodName = null;
+    starter2.shutdown(new String[] {"a"});
+    assertThat(starter2.isFinish()).isTrue();
+  }
+
+  @Test
+  public void buildClosesOldClassLoader() throws Exception {
+    main.addKey("key1", "com.uchicom.plate.Main", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    var cp = new CpInfo(new File("target/classes/").toURI().toString());
+    cp.setStatus(com.uchicom.plate.enumeration.CpState.INCLUDED);
+    keyInfo.addCp(cp);
+    keyInfo.build();
+    var first = keyInfo.getClassLoader();
+    assertThat(first).isNotNull();
+
+    keyInfo.build();
+
+    assertThat(keyInfo.getClassLoader()).isNotSameAs(first);
+    // close済みのURLClassLoaderは新規リソース取得ができない
+    assertThat(first.findResource("com/uchicom/plate/Main.class")).isNull();
+  }
+
+  @Test
+  public void removeKeyStopsStarterAndSchedule() throws Exception {
+    var starter = org.mockito.Mockito.mock(Starter.class);
+    var schedule = org.mockito.Mockito.mock(com.uchicom.plate.scheduler.Schedule.class);
+    main.addKey("key1", "com.uchicom.hoge.Main", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    keyInfo.getStarterList().add(starter);
+    keyInfo.setSchedule(schedule);
+
+    main.removeKey("key1", "service");
+
+    org.mockito.Mockito.verify(starter).shutdown();
+    org.mockito.Mockito.verify(schedule).cancel();
+    assertThat(main.getPortMap().get("service").getList()).isEmpty();
+  }
+
+  @Test
+  public void restartKeyIgnoresRecovery() throws Exception {
+    main.addKey("key1", "com.uchicom.plate.NoSuchClass", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    keyInfo.setStatus(com.uchicom.plate.enumeration.KeyState.ENABLE);
+    var old = org.mockito.Mockito.mock(Starter.class);
+    keyInfo.getStarterList().add(old);
+
+    main.restartKey("service", "key1");
+
+    org.mockito.Mockito.verify(old).shutdown();
+    assertThat(keyInfo.getStarterList()).hasSize(1);
+    assertThat(keyInfo.getStarterList().get(0)).isNotSameAs(old);
+  }
+
+  @Test
+  public void releaseRenamesOnlyOnDownloadOrDeployFailure(
+      @org.junit.jupiter.api.io.TempDir File dir) throws Exception {
+    var releaseDto = new com.uchicom.plate.dto.ReleaseDto();
+    releaseDto.dirPath = dir.getPath();
+    releaseDto.auto = new com.uchicom.plate.dto.AutoDto();
+    releaseDto.auto.detect = "^(v[0-9]+)[.]txt$";
+    var file = new File(dir, "v1.txt");
+    org.assertj.core.api.Assertions.assertThat(file.createNewFile()).isTrue();
+    org.mockito.Mockito.doThrow(new com.uchicom.plate.exception.ServiceException("ng"))
+        .when(deployService)
+        .deploy(releaseDto, "v1");
+
+    main.release(dir.getPath(), java.nio.file.Path.of("v1.txt"), java.util.List.of(releaseDto));
+
+    assertThat(file).doesNotExist();
+    assertThat(new File(dir, "ERR_v1.txt")).exists();
   }
 }

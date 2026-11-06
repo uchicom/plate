@@ -468,4 +468,15 @@ public class DeployServiceTest {
     header[156] = '5'; // directory
     return header;
   }
+
+  @Test
+  public void deployInvalidTag() {
+    var service = new DeployService();
+    var releaseDto = new ReleaseDto();
+    releaseDto.dirPath = "release";
+    releaseDto.deploy = new DeployDto();
+    for (var tag : new String[] {null, "", ".", "..", "../x", "a/b", "a" + (char) 92 + "b"}) {
+      assertThrows(ServiceException.class, () -> service.deploy(releaseDto, tag));
+    }
+  }
 }

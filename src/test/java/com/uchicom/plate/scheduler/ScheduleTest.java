@@ -22,4 +22,21 @@ public class ScheduleTest {
             Date.from(
                 LocalDateTime.of(2022, 2, 14, 0, 0, 0).atZone(ZoneId.systemDefault()).toInstant()));
   }
+
+  @Test
+  public void cancelStopsReRegister() {
+    Cron cron = mock(Cron.class);
+    doReturn(LocalDateTime.now().plusDays(1)).when(cron).nextDateTime();
+    Schedule schedule = new Schedule(cron, LocalDateTime.now());
+    var timer = new java.util.Timer(true);
+    schedule.register(timer, mock(com.uchicom.plate.Starter.class));
+    var task = schedule.timerTask;
+
+    schedule.cancel();
+    schedule.register();
+
+    assertThat(schedule.isCancelled()).isTrue();
+    assertThat(schedule.timerTask).isSameAs(task);
+    timer.cancel();
+  }
 }
