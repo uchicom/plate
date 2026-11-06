@@ -52,6 +52,14 @@ public class DeployService {
     if (releaseDto.deploy == null) {
       throw new ServiceException("deploy設定は存在しません.");
     }
+    if (tag == null
+        || tag.isEmpty()
+        || tag.equals(".")
+        || tag.equals("..")
+        || tag.contains("/")
+        || tag.contains("\\")) {
+      throw new ServiceException("tagが不正です." + tag);
+    }
     var dir = createFile(releaseDto.dirPath, tag);
     if (!dir.exists()) {
       throw new ServiceException("ディレクトリが存在しません." + dir.getPath());

@@ -6,6 +6,7 @@ import com.uchicom.plate.enumeration.CpState;
 import com.uchicom.plate.enumeration.KeyState;
 import com.uchicom.plate.enumeration.RecoveryMethod;
 import com.uchicom.plate.scheduler.Schedule;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -137,12 +138,33 @@ public class KeyInfo {
   public void build() {
     if (cpList.size() > 0) {
       URL[] urls = CpInfo.toUrlArray(cpList, CpState.INCLUDED);
+      closeClassLoader();
       if (porter.getClassLoader() != null) {
         classLoader = new URLClassLoader(urls, porter.getClassLoader());
       } else {
         classLoader = new URLClassLoader(urls);
       }
     }
+  }
+
+  /** 旧ClassLoaderをcloseしてMetaspaceリークとjarのファイルロックを防ぐ。 */
+  void closeClassLoader() {
+    if (classLoader == null) {
+      return;
+    }
+    try {
+      classLoader.close();
+    } catch (IOException e) {
+      if (plate != null) {
+        plate.stackTrace("ClassLoader close error", e);
+      }
+    } finally {
+      classLoader = null;
+    }
+  }
+
+  public Schedule getSchedule() {
+    return schedule;
   }
 
   public RecoveryMethod getRecovery() {

@@ -191,28 +191,48 @@ public class Main {
         key,
         port,
         startingKey -> {
-          String[] lastStartParams = null;
-          // 停止処理
-          for (Starter starter : startingKey.getStarterList()) {
-            if (!starter.isFinish()) {
-              try {
-                if (params.length == 0) {
-                  starter.shutdown();
-                } else {
-                  starter.shutdown(params);
-                }
-                lastStartParams = starter.getParams();
-              } catch (Exception e) {
-                throw new CmdException(e);
-              }
-            }
-          }
-          startingKey.getStarterList().clear();
+          var lastStartParams = stopStarters(startingKey, params);
           if (startingKey.getRecovery() == RecoveryMethod.AUTO && startingKey.status.isEnable()) {
             startingKey.build();
             start(startingKey.create(lastStartParams, StarterKind.SERVICE));
           }
         });
+  }
+
+  /** recoveryの設定に関わらず、停止して再ビルド・再起動する(デプロイ後の再起動用)。 */
+  void restartKey(String port, String key) throws CmdException {
+    checkPort(port);
+    keyAction(
+        key,
+        port,
+        startingKey -> {
+          var lastStartParams = stopStarters(startingKey, new String[0]);
+          if (startingKey.status.isEnable()) {
+            startingKey.build();
+            start(startingKey.create(lastStartParams, StarterKind.SERVICE));
+          }
+        });
+  }
+
+  /** 稼働中のStarterを停止してリストをクリアし、最後に停止したStarterのパラメータを返す。 */
+  private String[] stopStarters(KeyInfo startingKey, String[] params) throws CmdException {
+    String[] lastStartParams = null;
+    for (Starter starter : startingKey.getStarterList()) {
+      if (!starter.isFinish()) {
+        try {
+          if (params.length == 0) {
+            starter.shutdown();
+          } else {
+            starter.shutdown(params);
+          }
+          lastStartParams = starter.getParams();
+        } catch (Exception e) {
+          throw new CmdException(e);
+        }
+      }
+    }
+    startingKey.getStarterList().clear();
+    return lastStartParams;
   }
 
   /** キーを編集する。 */
@@ -240,8 +260,18 @@ public class Main {
   /** キーを除去する。 */
   public void removeKey(String key, String port) throws CmdException {
     checkPort(port);
-    List<KeyInfo> list = portMap.get(port).getList();
-    list.remove(new KeyInfo(key));
+    keyAction(
+        key,
+        port,
+        startingKey -> {
+          // 稼働中のStarterとスケジュールを止めてから除去する
+          stopStarters(startingKey, new String[0]);
+          if (startingKey.getSchedule() != null) {
+            startingKey.getSchedule().cancel();
+          }
+          startingKey.closeClassLoader();
+          portMap.get(port).getList().remove(startingKey);
+        });
   }
 
   /** キーを使用可にする。 */
@@ -370,7 +400,7 @@ public class Main {
                   if (!batch.disabled) {
                     startKey.setStatus(KeyState.ENABLE);
                   }
-                  if (batch.schedule != null) {
+                  if (batch.schedule != null && !batch.disabled) {
                     Schedule schedule = null;
                     if (batch.schedule.cron != null) {
                       schedule = scheduleFactory.create(batch.schedule.cron);
@@ -400,6 +430,10 @@ public class Main {
     if (releaseDtoMap.isEmpty()) {
       return;
     }
+    if (watchThread != null && watchThread.isAlive()) {
+      // 監視スレッドの重複起動を防ぐ
+      return;
+    }
     var autoReleaseList =
         releaseDtoMap.entrySet().stream()
             .map(entry -> entry.getValue())
@@ -425,26 +459,28 @@ public class Main {
                       watchPath);
                 }
                 WatchKey key = null;
-                while ((key = service.take()) != null) {
-                  if (!key.isValid()) continue;
+                while (!watchKeyPathMap.isEmpty() && (key = service.take()) != null) {
+                  var watchPath = watchKeyPathMap.get(key);
+                  if (watchPath == null) continue;
                   for (WatchEvent<?> event : key.pollEvents()) {
                     if (StandardWatchEventKinds.OVERFLOW.equals(event.kind())) continue;
                     // eventではファイル名しかとれない
                     var file = (Path) event.context();
-                    var watchPath = watchKeyPathMap.get(key);
-                    release(watchPath, file, autoReleaseList);
+                    try {
+                      release(watchPath, file, autoReleaseList);
+                    } catch (Throwable t) {
+                      stackTrace("release error:" + file, t);
+                    }
                   }
-                  boolean valid = key.reset();
-                  if (!valid) {
-                    System.out.println("reset == false");
+                  if (!key.reset()) {
+                    logger.warning("監視対象ディレクトリが無効になりました:" + watchPath);
+                    watchKeyPathMap.remove(key);
                   }
                 }
               } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                stackTrace("release watch error", e);
               } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
               }
             });
     thread.setDaemon(false); // mainスレッドと運命を共に
@@ -453,31 +489,55 @@ public class Main {
   }
 
   void release(String watchPath, Path filePath, List<ReleaseDto> autoReleaseList) {
+    var fileName = filePath.toString();
+    if (fileName.startsWith("ERR_")) {
+      // 失敗済みとしてリネームされたファイルは対象外
+      return;
+    }
     for (var releaseDto : autoReleaseList) {
       if (!watchPath.equals(releaseDto.dirPath)) {
         continue;
       }
       var pattern = Pattern.compile(releaseDto.auto.detect);
-      var filePathString = watchPath + "/" + filePath.toString();
-      var matcher = pattern.matcher(filePath.toString());
+      var matcher = pattern.matcher(fileName);
       if (!matcher.find()) {
         continue;
       }
       var tag = matcher.group(1);
+      var file = new File(watchPath, fileName);
       try {
         var result = githubService.download(releaseDto, tag);
         if (result != null) {
           logger.info(result);
         }
-        deployService.deploy(releaseDto, tag);
-        if (releaseDto.auto.service != null) {
-          // 再起動する
-          shutdownKey("service", releaseDto.auto.service, new String[0]);
-        }
       } catch (Exception e) {
-        var file = Path.of(filePathString).toFile();
-        file.renameTo(new File(file.getParent(), "ERR_" + file.getName()));
+        stackTrace("release download error:" + tag, e);
+        markError(file);
+        continue;
       }
+      try {
+        deployService.deploy(releaseDto, tag);
+      } catch (Exception e) {
+        stackTrace("release deploy error:" + tag, e);
+        markError(file);
+        continue;
+      }
+      logger.info("release deploy success:" + tag);
+      if (releaseDto.auto.service != null) {
+        try {
+          // recoveryに関わらず再起動する
+          restartKey("service", releaseDto.auto.service);
+        } catch (Exception e) {
+          // デプロイは成功しているためERR_にはリネームしない
+          stackTrace("release restart error:" + releaseDto.auto.service, e);
+        }
+      }
+    }
+  }
+
+  private void markError(File file) {
+    if (!file.renameTo(new File(file.getParent(), "ERR_" + file.getName()))) {
+      logger.warning("ERR_へのリネームに失敗しました:" + file.getPath());
     }
   }
 
