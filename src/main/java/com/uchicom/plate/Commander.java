@@ -35,7 +35,6 @@ import com.uchicom.plate.cmd.util.UserCmd;
 import com.uchicom.plate.handler.CmdServerHandler;
 import com.uchicom.plate.handler.Handler;
 import com.uchicom.plate.service.DeployService;
-import com.uchicom.plate.service.GithubService;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
@@ -131,7 +130,7 @@ public class Commander implements Runnable {
     cmdList.add(new CPassCmd(this));
     cmdList.add(new PurgeCmd(this));
     // その他
-    cmdList.add(new DownloadCmd(this, new GithubService()));
+    cmdList.add(new DownloadCmd(this, plate.getGithubService()));
     cmdList.add(new LsdlCmd(this, new DeployService()));
     cmdList.add(new DeployCmd(this, new DeployService()));
     // コマンドクラスの準備
