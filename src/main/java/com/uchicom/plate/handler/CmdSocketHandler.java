@@ -114,56 +114,10 @@ public class CmdSocketHandler implements Handler {
     if (key.isReadable()) {
       try {
         SocketChannel socketChannel = (SocketChannel) key.channel();
-        // \r\nまで読み込み続ける
-        if (checkCmd(socketChannel)) {
-          // コマンド解析可能
-          // コマンド実行
-          // 読み込むデータがなくても監視は続ける。
-          // cmdチェック
-          String cmdLine = cmdBuff.toString();
-          cmdBuff.setLength(0);
-          // 改行のみは次行へ
-          if (cmdLine.length() > 0) {
-            Map<String, AbstractCmd> cmdMap = Commander.getInstance().getCmdMap();
-            String[] cmdParams = cmdLine.split(Commander.CMD_SPRIT_CHAR, 0);
-            if (cmdParams.length > 0) {
-              String cmdString = cmdParams[0];
-              if (cmdMap.containsKey(cmdString)) {
-                AbstractCmd cmd = cmdMap.get(cmdString);
-                String[] params = Arrays.copyOfRange(cmdParams, 1, cmdParams.length);
-                // 認証チェックしてエラーの場合はNG
-                if (cmd.checkAuth(this)) {
-                  // パラメータチェックしてエラーだったら
-                  if (cmd.checkParam(this, params)) {
-                    //
-                    if (cmd.checkConfirm()) {
-                      resBuff.append("execute ok ? yes/[no]\r\n");
-                    }
-                    try {
-                      var result = cmd.execute(this, params);
-                      if (result != null) {
-                        resBuff.append(result);
-                      }
-                      resBuff.append("OK\r\n");
-                    } catch (Throwable t) {
-                      resBuff.append("NG: " + t.getMessage() + "\r\n");
-                    }
-                  } else {
-                    resBuff.append("NG: parameter error\r\n");
-                    resBuff.append(cmd.getHelp());
-                  }
-                } else {
-                  resBuff.append("NG: Authentication error\r\n");
-                }
-              } else {
-                // コマンドなしエラー
-                resBuff.append("NG: Command not found.");
-                resBuff.append(cmdLine);
-                resBuff.append("\r\n");
-              }
-            }
-          }
-          writeCmdLine(resBuff);
+        // 受信データを読み込み、改行ごとにコマンドを順次実行する
+        readChannel(socketChannel);
+        while (parseLine()) {
+          executeLine();
         }
         if (key.isValid() && resBuff.length() > 0) {
           // コマンドラインの読み込み完了時に書き込み開始
@@ -188,6 +142,53 @@ public class CmdSocketHandler implements Handler {
       }
       key.interestOps(SelectionKey.OP_READ);
     }
+  }
+
+  /** 入力済みの1行を解析して実行し、結果とプロンプトをresBuffに追記する */
+  private void executeLine() throws IOException {
+    String cmdLine = cmdBuff.toString();
+    cmdBuff.setLength(0);
+    // 改行のみは次行へ
+    if (cmdLine.length() > 0) {
+      Map<String, AbstractCmd> cmdMap = Commander.getInstance().getCmdMap();
+      String[] cmdParams = cmdLine.split(Commander.CMD_SPRIT_CHAR, 0);
+      if (cmdParams.length > 0) {
+        String cmdString = cmdParams[0];
+        if (cmdMap.containsKey(cmdString)) {
+          AbstractCmd cmd = cmdMap.get(cmdString);
+          String[] params = Arrays.copyOfRange(cmdParams, 1, cmdParams.length);
+          // 認証チェックしてエラーの場合はNG
+          if (cmd.checkAuth(this)) {
+            // パラメータチェックしてエラーだったら
+            if (cmd.checkParam(this, params)) {
+              if (cmd.checkConfirm()) {
+                resBuff.append("execute ok ? yes/[no]\r\n");
+              }
+              try {
+                var result = cmd.execute(this, params);
+                if (result != null) {
+                  resBuff.append(result);
+                }
+                resBuff.append("OK\r\n");
+              } catch (Throwable t) {
+                resBuff.append("NG: " + t.getMessage() + "\r\n");
+              }
+            } else {
+              resBuff.append("NG: parameter error\r\n");
+              resBuff.append(cmd.getHelp());
+            }
+          } else {
+            resBuff.append("NG: Authentication error\r\n");
+          }
+        } else {
+          // コマンドなしエラー
+          resBuff.append("NG: Command not found.");
+          resBuff.append(cmdLine);
+          resBuff.append("\r\n");
+        }
+      }
+    }
+    writeCmdLine(resBuff);
   }
 
   private void writeCmdLine(StringBuilder cmdBuff) throws IOException {
@@ -245,23 +246,65 @@ public class CmdSocketHandler implements Handler {
   //        socketChannel.write(byteBuffer);
   //    }
 
-  // 実行クラスとパラメータ引数の文字列長を抽出する
-  boolean escape = false;
+  private static final int IAC = 0xFF;
+  private static final int SB = 0xFA;
+  private static final int SE = 0xF0;
+  private static final int WILL = 0xFB;
+  private static final int DONT = 0xFE;
 
-  private boolean checkCmd(SocketChannel socketChannel) throws IOException {
-    boolean lineEnd = false;
+  /** Telnet IACシーケンスの解析状態 */
+  private enum IacState {
+    NONE,
+    /** IAC受信直後 */
+    COMMAND,
+    /** WILL/WONT/DO/DONT受信後、オプションコード待ち */
+    OPTION,
+    /** サブネゴシエーション中 */
+    SUB,
+    /** サブネゴシエーション中にIAC受信 */
+    SUB_IAC
+  }
+
+  /** エスケープシーケンスの解析状態 */
+  private enum EscState {
+    NONE,
+    /** ESC受信直後 */
+    ESC,
+    /** CSI(ESC [)内。終端バイトまで読み飛ばす */
+    CSI
+  }
+
+  private IacState iacState = IacState.NONE;
+  private EscState escState = EscState.NONE;
+
+  /** チャンネルから受信バッファへ追記する。未処理データは保持する。 */
+  private void readChannel(SocketChannel socketChannel) throws IOException {
     int length = socketChannel.read(cmd);
     if (length == -1) {
       throw new IOException("クライアントが切断しました.");
     }
+  }
+
+  /**
+   * 受信バッファを改行まで解析する。改行以降の未処理バイトは次回のために保持する。
+   *
+   * @return 改行を検出した場合true
+   */
+  private boolean parseLine() {
+    boolean lineEnd = false;
     cmd.flip();
-    // 後ろからチェックして\r\nがあればコマンド解析開始
-    while (cmd.position() < cmd.limit()) {
-      int ch = (int) cmd.get();
-      if (ch == 0x08) {
+    while (cmd.hasRemaining()) {
+      int ch = cmd.get() & 0xFF;
+      if (skipIac(ch) || skipEscape(ch)) {
+        continue;
+      }
+      if (ch == IAC) {
+        iacState = IacState.COMMAND;
+      } else if (ch == 0x1B) {
+        escState = EscState.ESC;
+      } else if (ch == 0x08) {
         // BSなので一文字消す。
         if (cmdBuff.length() > 0) {
-
           if (!cmdBuff.toString().matches("^ *c?pass +[^ ]+$")) {
             resBuff.append((char) ch);
             resBuff.append(" ");
@@ -269,35 +312,81 @@ public class CmdSocketHandler implements Handler {
           }
           cmdBuff.setLength(cmdBuff.length() - 1);
         }
-      } else if (ch < 0x0 || ch == '\n' || ch == '\r') {
+      } else if (ch == '\n' || ch == '\r') {
         resBuff.append("\r\n");
         lineEnd = true;
         break;
-      } else if (ch >= 0x20 && ch != '\r') {
-        if ('[' == ch || 0x7F < ch) {
-          escape = true;
-        } else if (escape) {
-          escape = false;
-        } else {
-          cmdBuff.append((char) ch);
-          if (!cmdBuff.toString().matches("^ *c?pass +[^ ]+$")) {
-            resBuff.append((char) ch);
-          }
+      } else if (ch >= 0x20 && ch < 0x7F) {
+        cmdBuff.append((char) ch);
+        if (!cmdBuff.toString().matches("^ *c?pass +[^ ]+$")) {
+          resBuff.append((char) ch);
         }
-      } else if (0x7F == ch) {
-        plate.info("7F");
-        // なにもしていない
-      } else {
-        plate.info("other");
       }
+      // 0x7F、その他の制御文字、0x80以上のバイトは無視する
     }
-    cmd.clear();
+    cmd.compact();
     return lineEnd;
   }
 
-  /** データを書き込んで0に設定 */
+  /**
+   * IACシーケンス中のバイトを読み飛ばす。
+   *
+   * @return IACシーケンスの一部として消費した場合true
+   */
+  private boolean skipIac(int ch) {
+    switch (iacState) {
+      case COMMAND:
+        if (ch == SB) {
+          iacState = IacState.SUB;
+        } else if (WILL <= ch && ch <= DONT) {
+          iacState = IacState.OPTION;
+        } else {
+          // IAC IAC(0xFFリテラル)やNOPなどの2バイトコマンド
+          iacState = IacState.NONE;
+        }
+        return true;
+      case OPTION:
+        iacState = IacState.NONE;
+        return true;
+      case SUB:
+        if (ch == IAC) {
+          iacState = IacState.SUB_IAC;
+        }
+        return true;
+      case SUB_IAC:
+        iacState = ch == SE ? IacState.NONE : IacState.SUB;
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * ESCシーケンス(カーソルキー等)中のバイトを読み飛ばす。リテラルの'['は対象外。
+   *
+   * @return エスケープシーケンスの一部として消費した場合true
+   */
+  private boolean skipEscape(int ch) {
+    switch (escState) {
+      case ESC:
+        escState = ch == '[' ? EscState.CSI : EscState.NONE;
+        return true;
+      case CSI:
+        if (0x40 <= ch && ch <= 0x7E) {
+          escState = EscState.NONE;
+        }
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /** データを書き込んで0に設定。部分書き込みに備えて全量書き込むまで繰り返す。 */
   private void writeMessage(SocketChannel socketChannel) throws IOException {
-    socketChannel.write(ByteBuffer.wrap(resBuff.toString().getBytes(StandardCharsets.US_ASCII)));
+    ByteBuffer buffer = ByteBuffer.wrap(resBuff.toString().getBytes(StandardCharsets.UTF_8));
+    while (buffer.hasRemaining()) {
+      socketChannel.write(buffer);
+    }
     resBuff.setLength(0);
   }
 }
