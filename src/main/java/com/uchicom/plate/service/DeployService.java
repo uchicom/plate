@@ -99,14 +99,16 @@ public class DeployService {
     }
   }
 
-  void decompressTarGz(File file, String filter, File outputDir) throws IOException {
+  void decompressTarGz(File file, String filter, File outputDir)
+      throws IOException, ServiceException {
     var matcher = FileSystems.getDefault().getPathMatcher(filter);
     try (var gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)))) {
       decompressTar(gis, matcher, outputDir);
     }
   }
 
-  void decompressTar(InputStream is, PathMatcher matcher, File outputDir) throws IOException {
+  void decompressTar(InputStream is, PathMatcher matcher, File outputDir)
+      throws IOException, ServiceException {
     var header = new byte[512];
     while (true) {
       if (is.readNBytes(header, 0, 512) < 512) break;
@@ -121,39 +123,50 @@ public class DeployService {
       long fileSize = sizeStr.isEmpty() ? 0L : Long.parseLong(sizeStr, 8);
       byte fileType = header[156];
 
-      var outFile = new File(outputDir, fileName);
+      // 展開先ディレクトリ外への書き込みを拒否(Zip Slip対策)
+      var outFile = resolveEntry(outputDir, fileName);
 
-      if (fileType != '5') { // ディレクトリ
-        boolean matches = matcher.matches(Path.of(fileName));
-        if (matches) {
-          if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
+      // 通常ファイルのみ書き込む(ディレクトリ・シンボリックリンク等は対象外)
+      boolean regular = fileType == '0' || fileType == 0;
+      long remaining = fileSize;
+      if (regular && matcher.matches(Path.of(fileName))) {
+        if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
 
-          try (var out = new FileOutputStream(outFile)) {
-            var buf = new byte[4096];
-            long remaining = fileSize;
-            while (remaining > 0) {
-              int read = is.readNBytes(buf, 0, (int) Math.min(buf.length, remaining));
-              if (read == 0) break;
-              out.write(buf, 0, read);
-              remaining -= read;
-            }
+        try (var out = new FileOutputStream(outFile)) {
+          var buf = new byte[4096];
+          while (remaining > 0) {
+            int read = is.readNBytes(buf, 0, (int) Math.min(buf.length, remaining));
+            if (read == 0) break;
+            out.write(buf, 0, read);
+            remaining -= read;
           }
         }
       }
 
-      // 512バイト境界までパディングをスキップ
+      // 未読のデータと512バイト境界までのパディングをスキップ
       int padding = (int) (fileSize % 512);
-      if (padding != 0) is.skip(512 - padding);
+      is.skipNBytes(remaining + (padding == 0 ? 0 : 512 - padding));
     }
   }
 
-  void decompressZip(File file, String filter, File outputDir) throws IOException {
+  File resolveEntry(File outputDir, String entryName) throws ServiceException {
+    var base = outputDir.toPath().toAbsolutePath().normalize();
+    var target = base.resolve(entryName).normalize();
+    if (!target.startsWith(base) || target.equals(base)) {
+      throw new ServiceException("不正なアーカイブエントリです." + entryName);
+    }
+    return target.toFile();
+  }
+
+  void decompressZip(File file, String filter, File outputDir)
+      throws IOException, ServiceException {
     var matcher = FileSystems.getDefault().getPathMatcher(filter);
     try (var zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(file)))) {
       var entry = zis.getNextEntry();
       while (entry != null) {
         var name = entry.getName();
-        var outFile = new File(outputDir, name);
+        // 展開先ディレクトリ外への書き込みを拒否(Zip Slip対策)
+        var outFile = resolveEntry(outputDir, name);
         if (!entry.isDirectory()) {
           boolean matches = matcher.matches(Path.of(name));
           if (matches) {
