@@ -283,4 +283,17 @@ public class CronTest {
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 19))).isTrue(); // Sat
     assertThat(cron.checkDayOfWeek(LocalDate.of(2022, 2, 20))).isTrue(); // Sun
   }
+
+  @Test
+  public void unreachableDateIsRejected() {
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> new Cron("0", "0", "30", "2", "*"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void leapDayIsAccepted() {
+    var cron = new Cron("0", "0", "29", "2", "*");
+    cron.setScheduledTriggerIndex(LocalDateTime.of(2025, 3, 1, 0, 0));
+    assertThat(cron.nextDateTime()).isEqualTo(LocalDateTime.of(2028, 2, 29, 0, 0));
+  }
 }

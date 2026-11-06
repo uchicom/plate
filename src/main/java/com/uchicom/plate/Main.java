@@ -32,6 +32,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +55,9 @@ import org.yaml.snakeyaml.Yaml;
 public class Main {
 
   public Timer timer = new Timer();
+
+  /** リリースディレクトリ監視スレッド */
+  private Thread watchThread;
 
   /**
    * コマンド引数を使用してサーバーを起動する。 ポート番号を指定してコマンドを受け付けるポート番号を指定する。
@@ -444,6 +448,7 @@ public class Main {
               }
             });
     thread.setDaemon(false); // mainスレッドと運命を共に
+    watchThread = thread;
     thread.start();
   }
 
@@ -478,13 +483,29 @@ public class Main {
 
   /** 認証ありで設定を読み込む。 */
   public void load(String fileName, String user, String pass) throws CmdException {
-    var config = loadConfig(loadFile);
+    var file = new File(fileName);
+    var config = loadConfig(file);
     var cryptPass = Base64.getEncoder().encodeToString(Crypt.encrypt3(user, pass));
     if (!config.user.equals(user) || !config.hash.equals(cryptPass)) {
       throw new CmdException("認証エラー");
     }
+    // 既存のStarter・スケジュール・監視スレッドを停止してから再初期化する
+    stopAll();
+    loadFile = file;
+    this.config = config;
     init(config);
-    loadFile = new File(fileName);
+  }
+
+  /** 既存のStarter、スケジュール、監視スレッドを停止して初期状態に戻す。 */
+  void stopAll() {
+    shutdown();
+    timer.cancel();
+    timer = new Timer();
+    if (watchThread != null) {
+      watchThread.interrupt();
+      watchThread = null;
+    }
+    portMap.clear();
   }
 
   public void save(String user, String pass) throws CmdException {
@@ -514,24 +535,34 @@ public class Main {
 
   /** 全ての実行を自動復帰せずに終了させる. できるかぎりshutdownする. */
   void shutdown() {
-    if (config.service == null) {
-      return;
+    // 設定ファイルのshutdown順序(未設定は最後)
+    Map<String, Integer> shutdownOrder = new HashMap<>();
+    if (config != null && config.service != null && config.service.services != null) {
+      config.service.services.forEach(
+          service -> {
+            if (service.order != null) {
+              shutdownOrder.put(service.key, service.order.shutdown);
+            }
+          });
     }
-    if (config.service.services == null) {
-      return;
+    // portMapを基準にするため、addコマンドで追加したキーも対象になる
+    for (Porter porter : new ArrayList<>(portMap.values())) {
+      porter.getList().stream()
+          .sorted(
+              Comparator.comparingInt(
+                  (KeyInfo keyInfo) ->
+                      shutdownOrder.getOrDefault(keyInfo.getKey(), Integer.MAX_VALUE)))
+          .forEach(
+              keyInfo -> {
+                for (Starter starter : new ArrayList<>(keyInfo.getStarterList())) {
+                  try {
+                    starter.shutdown();
+                  } catch (Exception e) {
+                    stackTrace("Starter shutdown error", e);
+                  }
+                }
+              });
     }
-    config.service.services.stream()
-        .sorted((a, b) -> a.order.shutdown - b.order.shutdown)
-        .forEach(
-            service -> {
-              try {
-                portMap.get("service").getList().stream()
-                    .filter(keyInfo -> keyInfo.getKey().equals(service.key))
-                    .forEach(keyInfo -> keyInfo.getStarterList().forEach(Starter::shutdown));
-              } catch (Exception e) {
-                stackTrace("Starter shutdown error", e);
-              }
-            });
   }
 
   /**

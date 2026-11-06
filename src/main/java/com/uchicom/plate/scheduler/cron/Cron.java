@@ -132,35 +132,54 @@ public class Cron {
                                             IntStream.of(minutes)
                                                 .map(mi -> createTrigger(m, d, h, mi)))))
             .toArray();
+    if (triggers.length == 0 || !isReachable()) {
+      throw new IllegalArgumentException("到達不能なcron指定です:" + this);
+    }
   }
 
   public LocalDateTime nextDateTime() {
+    // 到達可能性は作成時に検証済みのため必ず終了する
+    while (true) {
+      scheduledTriggerIndex++;
+      if (scheduledTriggerIndex == triggers.length) {
+        scheduledTriggerIndex = 0;
+        targetYear++;
+      }
+      int nextPeriod = triggers[scheduledTriggerIndex];
+      // 月末存在チェック
+      if (YearMonth.of(targetYear, nextPeriod / 100_00_00).lengthOfMonth()
+          < nextPeriod / 100_00 % 100) {
+        continue;
+      }
+      var schedule =
+          LocalDateTime.of(
+              targetYear,
+              nextPeriod / 100_00_00,
+              nextPeriod / 100_00 % 100,
+              nextPeriod / 100 % 100,
+              nextPeriod % 100,
+              0,
+              0);
+      // 曜日チェック
+      if (checkDayOfWeek(schedule.toLocalDate())) {
+        return schedule;
+      }
+    }
+  }
 
-    scheduledTriggerIndex++;
-    if (scheduledTriggerIndex == triggers.length) {
-      scheduledTriggerIndex = 0;
-      targetYear++;
+  /** 月日・曜日の組み合わせが1回も発生しない場合はfalse. 曜日と閏年の周期(28年)を検査する. */
+  boolean isReachable() {
+    for (int m : months) {
+      for (int d : days) {
+        for (int year = 2000; year < 2028; year++) {
+          if (YearMonth.of(year, m).lengthOfMonth() >= d
+              && checkDayOfWeek(LocalDate.of(year, m, d))) {
+            return true;
+          }
+        }
+      }
     }
-    int nextPeriod = triggers[scheduledTriggerIndex];
-    // 月末存在チェック
-    if (YearMonth.of(targetYear, nextPeriod / 100_00_00).lengthOfMonth()
-        < nextPeriod / 100_00 % 100) {
-      return nextDateTime();
-    }
-    var schedule =
-        LocalDateTime.of(
-            targetYear,
-            nextPeriod / 100_00_00,
-            nextPeriod / 100_00 % 100,
-            nextPeriod / 100 % 100,
-            nextPeriod % 100,
-            0,
-            0);
-    // 曜日チェック
-    if (!checkDayOfWeek(schedule.toLocalDate())) {
-      return nextDateTime();
-    }
-    return schedule;
+    return false;
   }
 
   boolean checkDayOfWeek(LocalDate nextDate) {

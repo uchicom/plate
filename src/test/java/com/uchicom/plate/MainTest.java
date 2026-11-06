@@ -55,4 +55,20 @@ public class MainTest extends AbstractTest {
         .isEqualTo("glob:**test.htm");
     assertThat(actual.release.get("hoge").deploy.deployFiles.get(1).to).isEqualTo("hoge/www/");
   }
+
+  @Test
+  public void shutdownWithoutConfig() {
+    var starter = org.mockito.Mockito.mock(Starter.class);
+    main.addKey("key1", "com.uchicom.hoge.Main", "service");
+    main.getPortMap().get("service").getList().get(0).getStarterList().add(starter);
+
+    main.shutdown();
+
+    org.mockito.Mockito.verify(starter).shutdown();
+  }
+
+  @Test
+  public void shutdownWithoutPort() {
+    main.shutdown();
+  }
 }

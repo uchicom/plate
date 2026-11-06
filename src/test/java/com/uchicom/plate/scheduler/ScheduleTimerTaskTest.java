@@ -1,0 +1,29 @@
+// (C) 2026 uchicom
+package com.uchicom.plate.scheduler;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import com.uchicom.plate.Starter;
+import java.time.DateTimeException;
+import org.junit.jupiter.api.Test;
+
+public class ScheduleTimerTaskTest {
+
+  @Test
+  public void runRegisterError() {
+    var schedule = mock(Schedule.class);
+    var starter = mock(Starter.class);
+    var exception = new DateTimeException("invalid");
+    doThrow(exception).when(schedule).register();
+
+    var task = new ScheduleTimerTask(schedule, starter);
+
+    assertThatCode(task::run).doesNotThrowAnyException();
+    verify(starter).stackTrace(eq("Schedule register error"), any(Throwable.class));
+  }
+}
