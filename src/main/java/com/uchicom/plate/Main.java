@@ -112,6 +112,10 @@ public class Main {
     this.logger = logger;
   }
 
+  public GithubService getGithubService() {
+    return githubService;
+  }
+
   /** メイン処理実行クラス コマンドプロンプトを起動して終了する。 */
   public void execute() {
     Commander commander = new Commander(address, port, this);

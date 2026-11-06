@@ -10,6 +10,7 @@ import com.uchicom.plate.dto.DownloadFileDto;
 import com.uchicom.plate.dto.GithubDto;
 import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
+import com.uchicom.plate.helper.GithubHelper;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class GithubServiceTest {
   @Test
   public void downloadJar() throws Exception {
     // mock
-    var service = spy(new GithubService());
+    var service = spy(new GithubService(new GithubHelper()));
     var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";
@@ -90,7 +91,7 @@ public class GithubServiceTest {
   @Test
   public void downloadZip() throws Exception {
     // mock
-    var service = spy(new GithubService());
+    var service = spy(new GithubService(new GithubHelper()));
     var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";
@@ -130,9 +131,21 @@ public class GithubServiceTest {
   }
 
   @Test
+  public void downloadInvalidTag() {
+    var service = new GithubService(new GithubHelper());
+    var releaseDto = new ReleaseDto();
+    releaseDto.github = new GithubDto();
+    for (var tag : new String[] {"../x", "a/b", "a\\b", "..", ".", ""}) {
+      org.junit.jupiter.api.Assertions.assertThrows(
+          com.uchicom.plate.exception.ServiceException.class,
+          () -> service.download(releaseDto, tag));
+    }
+  }
+
+  @Test
   public void downloadTar() throws Exception {
     // mock
-    var service = spy(new GithubService());
+    var service = spy(new GithubService(new GithubHelper()));
     var releaseDto = new ReleaseDto();
     var dto = new GithubDto();
     dto.token = "token";

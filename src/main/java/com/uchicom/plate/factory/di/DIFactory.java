@@ -2,6 +2,7 @@
 package com.uchicom.plate.factory.di;
 
 import com.uchicom.plate.Main;
+import com.uchicom.plate.helper.GithubHelper;
 import com.uchicom.plate.logging.DailyRollingFileHandler;
 import com.uchicom.plate.scheduler.ScheduleFactory;
 import com.uchicom.plate.scheduler.cron.CronParser;
@@ -32,7 +33,11 @@ public class DIFactory {
   }
 
   static GithubService githubService() {
-    return new GithubService();
+    return new GithubService(githubHelper());
+  }
+
+  static GithubHelper githubHelper() {
+    return new GithubHelper();
   }
 
   static CronParser cronParser() {

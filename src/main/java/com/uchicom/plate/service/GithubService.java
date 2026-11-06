@@ -4,22 +4,32 @@ package com.uchicom.plate.service;
 import com.uchicom.plate.dto.ReleaseDto;
 import com.uchicom.plate.enumeration.DownloadFileKind;
 import com.uchicom.plate.exception.ServiceException;
+import com.uchicom.plate.helper.GithubHelper;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandler;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class GithubService {
+  private final GithubHelper githubHelper;
+
+  public GithubService(GithubHelper githubHelper) {
+    this.githubHelper = githubHelper;
+  }
+
   public String download(ReleaseDto releaseDto, String tag) throws ServiceException {
     if (releaseDto.github == null) {
       throw new ServiceException("github設定は存在しません.");
+    }
+    if (tag == null
+        || tag.isEmpty()
+        || tag.equals(".")
+        || tag.equals("..")
+        || tag.contains("/")
+        || tag.contains("\\")) {
+      throw new ServiceException("tagが不正です." + tag);
     }
     try {
       var dir = createFile(releaseDto.dirPath, tag);
@@ -46,6 +56,8 @@ public class GithubService {
             builder.append(file.getName() + ":" + file.length());
           });
       return builder.toString();
+    } catch (ServiceException e) {
+      throw e;
     } catch (Exception e) {
       throw new ServiceException(e);
     }
@@ -53,67 +65,28 @@ public class GithubService {
 
   /** JARダウンロード. */
   List<Path> downloadAssets(String token, File dir, String repos, String filter, String tag)
-      throws IOException, InterruptedException {
-    String body = dowload(token, repos, DownloadFileKind.TAGS, tag, BodyHandlers.ofString());
+      throws IOException, InterruptedException, ServiceException {
+    String body = githubHelper.fetchString(token, repos, DownloadFileKind.TAGS, tag);
     var matcher =
         Pattern.compile("\"id\":([0-9]+),\"node_id\":\"[^\"]+\",\"name\":\"(" + filter + ")\",")
             .matcher(body);
     var list = new ArrayList<Path>();
     while (matcher.find()) {
       list.add(
-          dowload(
+          githubHelper.fetchFile(
               token,
               repos,
               DownloadFileKind.ASSETS,
               matcher.group(1),
-              BodyHandlers.ofFile(new File(dir, matcher.group(2)).toPath())));
+              new File(dir, matcher.group(2)).toPath()));
     }
     return list;
   }
 
   Path downloadFile(String token, File dir, String repos, DownloadFileKind downloadKind, String tag)
-      throws IOException, InterruptedException {
-    return dowload(
-        token,
-        repos,
-        downloadKind,
-        tag,
-        BodyHandlers.ofFile(new File(dir, downloadKind.getFileName(tag)).toPath()));
-  }
-
-  <T> T dowload(
-      String token,
-      String repos,
-      DownloadFileKind downloadKind,
-      String param,
-      BodyHandler<T> handler)
-      throws IOException, InterruptedException {
-    HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-    var request = createRequest(token, repos, downloadKind, param);
-
-    var response = client.send(request, handler);
-    return response.body();
-  }
-
-  HttpRequest createRequest(
-      String token, String repos, DownloadFileKind downloadKind, String param) {
-    var builder = HttpRequest.newBuilder().uri(createUri(repos, downloadKind, param)).GET();
-    if (downloadKind == DownloadFileKind.ASSETS) {
-      builder.header("Accept", "application/octet-stream");
-    }
-    if (token != null) {
-      builder.header("Authorization", "Bearer " + token);
-    }
-    return builder.build();
-  }
-
-  String createPath(String repos, DownloadFileKind downloadKind, String param) {
-    return "/repos/" + repos + "/" + downloadKind.getPath(param);
-  }
-
-  URI createUri(String repos, DownloadFileKind downloadKind, String param) {
-    var uri = "https://api.github.com" + createPath(repos, downloadKind, param);
-    return URI.create(uri);
+      throws IOException, InterruptedException, ServiceException {
+    return githubHelper.fetchFile(
+        token, repos, downloadKind, tag, new File(dir, downloadKind.getFileName(tag)).toPath());
   }
 
   File createFile(String parent, String child) {
