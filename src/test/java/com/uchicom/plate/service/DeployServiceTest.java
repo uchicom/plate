@@ -348,6 +348,67 @@ public class DeployServiceTest {
     assertThat(new File(outputDir, "proj/www")).doesNotExist();
   }
 
+  @Test
+  public void decompressTar_pathTraversal(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var outputDir = tempDir.resolve("output").toFile();
+    outputDir.mkdir();
+    var matcher = FileSystems.getDefault().getPathMatcher("glob:**");
+    var tarStream = new ByteArrayOutputStream();
+    tarStream.write(tarEntry("../evil", "evil".getBytes(StandardCharsets.UTF_8)));
+    tarStream.write(new byte[1024]);
+
+    // test
+    assertThrows(
+        ServiceException.class,
+        () ->
+            service.decompressTar(
+                new ByteArrayInputStream(tarStream.toByteArray()), matcher, outputDir));
+
+    // assert
+    assertThat(tempDir.resolve("evil")).doesNotExist();
+  }
+
+  @Test
+  public void decompressTar_symlinkSkipped(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var outputDir = tempDir.toFile();
+    var matcher = FileSystems.getDefault().getPathMatcher("glob:**");
+    var link = tarDirEntry("proj/link");
+    link[156] = '2'; // symlink
+    var tarStream = new ByteArrayOutputStream();
+    tarStream.write(link);
+    tarStream.write(tarEntry("proj/a.txt", "a".getBytes(StandardCharsets.UTF_8)));
+    tarStream.write(new byte[1024]);
+
+    // test
+    service.decompressTar(new ByteArrayInputStream(tarStream.toByteArray()), matcher, outputDir);
+
+    // assert
+    assertThat(new File(outputDir, "proj/link")).doesNotExist();
+    assertThat(new File(outputDir, "proj/a.txt")).exists();
+  }
+
+  @Test
+  public void decompressZip_pathTraversal(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var zipFile = tempDir.resolve("test.zip").toFile();
+    try (var zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+      zos.putNextEntry(new ZipEntry("../evil"));
+      zos.write("evil".getBytes(StandardCharsets.UTF_8));
+      zos.closeEntry();
+    }
+    var outputDir = tempDir.resolve("output").toFile();
+    outputDir.mkdir();
+
+    // test
+    assertThrows(
+        ServiceException.class, () -> service.decompressZip(zipFile, "glob:**", outputDir));
+
+    // assert
+    assertThat(tempDir.resolve("evil")).doesNotExist();
+  }
+
   private byte[] tarEntry(String name, byte[] content) {
     var header = new byte[512];
     var nameBytes = name.getBytes(StandardCharsets.UTF_8);
