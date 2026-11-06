@@ -163,6 +163,56 @@ public class CmdSocketHandlerTest extends AbstractTest {
     assertThat(output()).contains("NG: エラー");
   }
 
+  private int count(String text, String target) {
+    return text.split(java.util.regex.Pattern.quote(target), -1).length - 1;
+  }
+
+  @Test
+  void crlfIsOneLine() throws Exception {
+    receive("foo\r\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(count(output(), "plate>")).isEqualTo(1);
+  }
+
+  @Test
+  void crAndLfSplitAcrossReadsIsOneLine() throws Exception {
+    receive("foo\r");
+    receive("\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(count(output(), "plate>")).isEqualTo(1);
+  }
+
+  @Test
+  void crNulIsOneLine() throws Exception {
+    receive('f', 'o', 'o', '\r', 0);
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(count(output(), "plate>")).isEqualTo(1);
+  }
+
+  @Test
+  void lfOnlyIsOneLine() throws Exception {
+    receive("foo\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(count(output(), "plate>")).isEqualTo(1);
+  }
+
+  @Test
+  void writeContinuesOnNextWritableEventWhenChannelWritesNothing() throws Exception {
+    maxWrite = 0;
+    when(fooCmd.execute(any(), any())).thenReturn("0123456789\r\n");
+    receive("foo\r\n");
+    // 0バイトしか書けない間は空回りせず戻り、OP_WRITEを維持する
+    assertThat(output()).isEmpty();
+    verify(key, never()).interestOps(SelectionKey.OP_READ);
+
+    // 以降は書き込み可能イベントのみ
+    when(key.isReadable()).thenReturn(false);
+    maxWrite = 4;
+    handler.handle(key);
+    assertThat(output()).isEqualTo("foo\r\n0123456789\r\nOK\r\nplate>");
+    verify(key).interestOps(SelectionKey.OP_READ);
+  }
+
   @Test
   void partialWriteIsRepeatedUntilComplete() throws Exception {
     maxWrite = 3;

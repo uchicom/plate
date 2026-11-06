@@ -119,7 +119,7 @@ public class CmdSocketHandler implements Handler {
         while (parseLine()) {
           executeLine();
         }
-        if (key.isValid() && resBuff.length() > 0) {
+        if (key.isValid() && (resBuff.length() > 0 || writeBuffer != null)) {
           // コマンドラインの読み込み完了時に書き込み開始
           key.interestOps(SelectionKey.OP_WRITE);
         }
@@ -132,15 +132,17 @@ public class CmdSocketHandler implements Handler {
     // 書き込みOKの場合は書き込む
     if (key.isValid() && key.isWritable()) {
       SocketChannel socketChannel = (SocketChannel) key.channel();
-      // 書き込むデータない場合は監視をやめる。
-      if (resBuff.length() == 0) {
-        //                // 次のコマンドライン読み込み
-        //
-      } else {
+      try {
         // 書き込むデータがあれば書き込む
-        writeMessage(socketChannel);
+        if (writeMessage(socketChannel)) {
+          // 全量書き込み完了なので次のコマンドライン読み込みへ
+          key.interestOps(SelectionKey.OP_READ);
+        }
+        // 書き込み残りがある場合はOP_WRITEを維持し、次の書き込み可能イベントで続きを書く
+      } catch (IOException e) {
+        plate.stackTrace("Command error", e);
+        key.cancel();
       }
-      key.interestOps(SelectionKey.OP_READ);
     }
   }
 
@@ -277,6 +279,12 @@ public class CmdSocketHandler implements Handler {
   private IacState iacState = IacState.NONE;
   private EscState escState = EscState.NONE;
 
+  /** 直前の行終端がCRだったか(直後のLF/NULを読み飛ばすため、read境界をまたいで保持する) */
+  private boolean crPending = false;
+
+  /** 書き込み途中の残りデータ */
+  private ByteBuffer writeBuffer = null;
+
   /** チャンネルから受信バッファへ追記する。未処理データは保持する。 */
   private void readChannel(SocketChannel socketChannel) throws IOException {
     int length = socketChannel.read(cmd);
@@ -298,6 +306,9 @@ public class CmdSocketHandler implements Handler {
       if (skipIac(ch) || skipEscape(ch)) {
         continue;
       }
+      if (crPending && ch != '\n' && ch != 0) {
+        crPending = false;
+      }
       if (ch == IAC) {
         iacState = IacState.COMMAND;
       } else if (ch == 0x1B) {
@@ -312,7 +323,11 @@ public class CmdSocketHandler implements Handler {
           }
           cmdBuff.setLength(cmdBuff.length() - 1);
         }
+      } else if (crPending && (ch == '\n' || ch == 0)) {
+        // CR LF / CR NUL は1行扱いなので、CR直後のLF/NULは読み飛ばす
+        crPending = false;
       } else if (ch == '\n' || ch == '\r') {
+        crPending = ch == '\r';
         resBuff.append("\r\n");
         lineEnd = true;
         break;
@@ -381,12 +396,22 @@ public class CmdSocketHandler implements Handler {
     }
   }
 
-  /** データを書き込んで0に設定。部分書き込みに備えて全量書き込むまで繰り返す。 */
-  private void writeMessage(SocketChannel socketChannel) throws IOException {
-    ByteBuffer buffer = ByteBuffer.wrap(resBuff.toString().getBytes(StandardCharsets.UTF_8));
-    while (buffer.hasRemaining()) {
-      socketChannel.write(buffer);
+  /**
+   * データを書き込む。0バイトしか書き込めない場合は中断し、残りを保持して次回に続きを書く。
+   *
+   * @return 全量書き込み済みの場合true
+   */
+  private boolean writeMessage(SocketChannel socketChannel) throws IOException {
+    if (writeBuffer == null && resBuff.length() > 0) {
+      writeBuffer = ByteBuffer.wrap(resBuff.toString().getBytes(StandardCharsets.UTF_8));
+      resBuff.setLength(0);
     }
-    resBuff.setLength(0);
+    while (writeBuffer != null && writeBuffer.hasRemaining()) {
+      if (socketChannel.write(writeBuffer) == 0) {
+        return false;
+      }
+    }
+    writeBuffer = null;
+    return resBuff.length() == 0;
   }
 }
