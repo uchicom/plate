@@ -409,6 +409,44 @@ public class DeployServiceTest {
     assertThat(tempDir.resolve("evil")).doesNotExist();
   }
 
+  @Test
+  public void decompressTar_dotSlashRootEntry(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var outputDir = tempDir.toFile();
+    var matcher = FileSystems.getDefault().getPathMatcher("glob:**");
+    var tarStream = new ByteArrayOutputStream();
+    tarStream.write(tarDirEntry("./"));
+    tarStream.write(tarEntry("./a.txt", "a".getBytes(StandardCharsets.UTF_8)));
+    tarStream.write(new byte[1024]);
+
+    // test
+    service.decompressTar(new ByteArrayInputStream(tarStream.toByteArray()), matcher, outputDir);
+
+    // assert: ルート自身は書き込まれず、配下は展開される
+    assertThat(new File(outputDir, "a.txt")).isFile();
+  }
+
+  @Test
+  public void decompressZip_dotSlashRootEntry(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var zipFile = tempDir.resolve("test.zip").toFile();
+    try (var zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+      zos.putNextEntry(new ZipEntry("./"));
+      zos.closeEntry();
+      zos.putNextEntry(new ZipEntry("./a.txt"));
+      zos.write("a".getBytes(StandardCharsets.UTF_8));
+      zos.closeEntry();
+    }
+    var outputDir = tempDir.resolve("output").toFile();
+    outputDir.mkdir();
+
+    // test
+    service.decompressZip(zipFile, "glob:**", outputDir);
+
+    // assert
+    assertThat(new File(outputDir, "a.txt")).isFile();
+  }
+
   private byte[] tarEntry(String name, byte[] content) {
     var header = new byte[512];
     var nameBytes = name.getBytes(StandardCharsets.UTF_8);

@@ -127,7 +127,7 @@ public class DeployService {
       var outFile = resolveEntry(outputDir, fileName);
 
       // 通常ファイルのみ書き込む(ディレクトリ・シンボリックリンク等は対象外)
-      boolean regular = fileType == '0' || fileType == 0;
+      boolean regular = (fileType == '0' || fileType == 0) && outFile != null;
       long remaining = fileSize;
       if (regular && matcher.matches(Path.of(fileName))) {
         if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
@@ -152,8 +152,12 @@ public class DeployService {
   File resolveEntry(File outputDir, String entryName) throws ServiceException {
     var base = outputDir.toPath().toAbsolutePath().normalize();
     var target = base.resolve(entryName).normalize();
-    if (!target.startsWith(base) || target.equals(base)) {
+    if (!target.startsWith(base)) {
       throw new ServiceException("不正なアーカイブエントリです." + entryName);
+    }
+    // ルート自身("./"等)は書き込み対象外
+    if (target.equals(base)) {
+      return null;
     }
     return target.toFile();
   }
@@ -167,7 +171,7 @@ public class DeployService {
         var name = entry.getName();
         // 展開先ディレクトリ外への書き込みを拒否(Zip Slip対策)
         var outFile = resolveEntry(outputDir, name);
-        if (!entry.isDirectory()) {
+        if (outFile != null && !entry.isDirectory()) {
           boolean matches = matcher.matches(Path.of(name));
           if (matches) {
             if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
