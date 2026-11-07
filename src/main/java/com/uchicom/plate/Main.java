@@ -2,8 +2,12 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.Starter.StarterKind;
+import com.uchicom.plate.dto.MethodDto;
+import com.uchicom.plate.dto.OrderDto;
 import com.uchicom.plate.dto.PlateConfig;
 import com.uchicom.plate.dto.ReleaseDto;
+import com.uchicom.plate.dto.ScheduleDto;
+import com.uchicom.plate.dto.StarterDto;
 import com.uchicom.plate.enumeration.CpState;
 import com.uchicom.plate.enumeration.KeyState;
 import com.uchicom.plate.enumeration.RecoveryMethod;
@@ -317,9 +321,54 @@ public class Main {
 
   /** 認証なしで設定ファイルをロードする。 */
   public void load(File file) {
+    var loaded = loadConfig(file);
+    validate(loaded);
     loadFile = file;
-    config = loadConfig(file);
+    config = loaded;
     init(config);
+  }
+
+  /** 設定を検証し、order/method未指定をデフォルト値で補完する。副作用(停止・登録)は行わない。 */
+  void validate(PlateConfig config) {
+    if (config.service != null && config.service.services != null) {
+      config.service.services.forEach(service -> validateStarter("service", service));
+    }
+    if (config.batch != null && config.batch.batches != null) {
+      config.batch.batches.forEach(
+          batch -> {
+            validateStarter("batch", batch);
+            if (batch.schedule != null) {
+              try {
+                createSchedule(batch.schedule);
+              } catch (RuntimeException e) {
+                throw new IllegalArgumentException(
+                    "batch:" + batch.key + " のスケジュールが不正です:" + e.getMessage(), e);
+              }
+            }
+          });
+    }
+  }
+
+  private void validateStarter(String type, StarterDto dto) {
+    if (dto.key == null || dto.className == null) {
+      throw new IllegalArgumentException(type + ":key と className は必須です:" + dto.key);
+    }
+    if (dto.order == null) {
+      dto.order = new OrderDto();
+    }
+    if (dto.method == null) {
+      dto.method = new MethodDto();
+    }
+    if (dto.method.startup == null) {
+      dto.method.startup = "main";
+    }
+  }
+
+  private Schedule createSchedule(ScheduleDto dto) {
+    if (dto.cron != null) {
+      return scheduleFactory.create(dto.cron);
+    }
+    return scheduleFactory.create(dto.minute, dto.hour, dto.day, dto.month, dto.dayOfWeek);
   }
 
   void init(PlateConfig config) {
@@ -406,19 +455,9 @@ public class Main {
                   if (!batch.disabled) {
                     startKey.setStatus(KeyState.ENABLE);
                   }
-                  if (batch.schedule != null && !batch.disabled) {
-                    Schedule schedule = null;
-                    if (batch.schedule.cron != null) {
-                      schedule = scheduleFactory.create(batch.schedule.cron);
-                    } else {
-                      schedule =
-                          scheduleFactory.create(
-                              batch.schedule.minute,
-                              batch.schedule.hour,
-                              batch.schedule.day,
-                              batch.schedule.month,
-                              batch.schedule.dayOfWeek);
-                    }
+                  if (batch.schedule != null) {
+                    // disabledでも登録し、実行時にstatusを見てskipする(enableで即有効になる)
+                    Schedule schedule = createSchedule(batch.schedule);
                     schedule.register(timer, startKey.create(batch.parameters, StarterKind.BATCH));
                     startKey.setSchedule(schedule);
                   }
@@ -555,11 +594,25 @@ public class Main {
     if (!config.user.equals(user) || !config.hash.equals(cryptPass)) {
       throw new CmdException("認証エラー");
     }
+    // 検証に失敗した場合は既存の稼働状態を変更しない
+    try {
+      validate(config);
+    } catch (RuntimeException e) {
+      stackTrace("設定の検証に失敗しました。既存の状態を維持します", e);
+      throw new CmdException("設定エラー:" + e.getMessage());
+    }
     // 既存のStarter・スケジュール・監視スレッドを停止してから再初期化する
     stopAll();
     loadFile = file;
     this.config = config;
-    init(config);
+    try {
+      init(config);
+    } catch (RuntimeException e) {
+      // 中途半端な状態を残さない
+      stackTrace("設定の読み込みに失敗しました。読み込み済みの内容を破棄します", e);
+      stopAll();
+      throw new CmdException("設定の読み込みに失敗しました:" + e.getMessage());
+    }
   }
 
   /** 既存のStarter、スケジュール、監視スレッドを停止して初期状態に戻す。 */
