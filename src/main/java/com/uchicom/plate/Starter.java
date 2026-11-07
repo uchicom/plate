@@ -68,13 +68,22 @@ public class Starter implements Runnable {
     if (start != null || !finish) {
       start = dateTimeService.getLocalDateTime();
       finish = false;
+      boolean failed = false;
       try {
         invoke(params);
       } catch (Throwable t) {
+        failed = true;
         stackTrace("Starter start error", t);
       } finally {
-        end = dateTimeService.getLocalDateTime();
-        finish = true;
+        // SERVICEでshutdownメソッドがあり、mainが正常に戻った場合は、アプリのスレッドが稼働中のため
+        // finishにしない(shutdown成功時にfinishにする)
+        if (kind != StarterKind.SERVICE || failed || startingKey.shutdownMethodName == null) {
+          end = dateTimeService.getLocalDateTime();
+          finish = true;
+          if (kind == StarterKind.SERVICE) {
+            releaseResources();
+          }
+        }
       }
     }
   }
@@ -130,7 +139,9 @@ public class Starter implements Runnable {
         try {
           Method method = classObject.getMethod(startingKey.shutdownMethodName);
           method.invoke(classObject);
+          end = dateTimeService.getLocalDateTime();
           finish = true;
+          releaseResources();
         } catch (SecurityException e) {
           plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {
@@ -166,7 +177,9 @@ public class Starter implements Runnable {
           Method method =
               classObject.getMethod(startingKey.shutdownMethodName, new Class[] {String[].class});
           method.invoke(classObject, new Object[] {params});
+          end = dateTimeService.getLocalDateTime();
           finish = true;
+          releaseResources();
         } catch (SecurityException e) {
           plate.stackTrace("Starter invoke error", e);
         } catch (NoSuchMethodException e) {
@@ -211,9 +224,19 @@ public class Starter implements Runnable {
       method.invoke(classObject, new Object[] {params});
     } finally {
       thread.setContextClassLoader(originalClassLoader);
-      clearLog(classObject.getClassLoader());
-      clearDriver(classObject.getClassLoader());
+      if (kind != StarterKind.SERVICE) {
+        releaseResources();
+      }
     }
+  }
+
+  /** ログハンドラーとJDBCドライバを解放する。SERVICEはアプリ停止後(ClassLoaderのclose前)に呼ぶ。 */
+  private void releaseResources() {
+    if (classObject == null) {
+      return;
+    }
+    clearLog(classObject.getClassLoader());
+    clearDriver(classObject.getClassLoader());
   }
 
   void clearLog(ClassLoader pluginCl) {

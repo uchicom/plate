@@ -225,7 +225,13 @@ public class Main {
           } else {
             starter.shutdown(params);
           }
+          if (!starter.isFinish()) {
+            // 停止に失敗した場合は、二重起動を防ぐためリストを保持してエラーにする
+            throw new CmdException("Starter shutdown failed: " + startingKey.getKey());
+          }
           lastStartParams = starter.getParams();
+        } catch (CmdException e) {
+          throw e;
         } catch (Exception e) {
           throw new CmdException(e);
         }
