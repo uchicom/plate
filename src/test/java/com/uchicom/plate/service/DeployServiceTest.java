@@ -447,6 +447,47 @@ public class DeployServiceTest {
     assertThat(new File(outputDir, "a.txt")).isFile();
   }
 
+  @Test
+  public void decompressTar_dotSlashGlobMatch(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var outputDir = tempDir.toFile();
+    var matcher = FileSystems.getDefault().getPathMatcher("glob:*.jar");
+    var tarStream = new ByteArrayOutputStream();
+    tarStream.write(tarEntry("./foo.jar", "jar".getBytes(StandardCharsets.UTF_8)));
+    tarStream.write(tarEntry("./bar.txt", "txt".getBytes(StandardCharsets.UTF_8)));
+    tarStream.write(new byte[1024]);
+
+    // test
+    service.decompressTar(new ByteArrayInputStream(tarStream.toByteArray()), matcher, outputDir);
+
+    // assert: ./ を除去した名前で照合される
+    assertThat(new File(outputDir, "foo.jar")).isFile();
+    assertThat(new File(outputDir, "bar.txt")).doesNotExist();
+  }
+
+  @Test
+  public void decompressZip_dotSlashGlobMatch(@TempDir Path tempDir) throws Exception {
+    var service = new DeployService();
+    var zipFile = tempDir.resolve("test.zip").toFile();
+    try (var zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+      zos.putNextEntry(new ZipEntry("./foo.jar"));
+      zos.write("jar".getBytes(StandardCharsets.UTF_8));
+      zos.closeEntry();
+      zos.putNextEntry(new ZipEntry("./bar.txt"));
+      zos.write("txt".getBytes(StandardCharsets.UTF_8));
+      zos.closeEntry();
+    }
+    var outputDir = tempDir.resolve("output").toFile();
+    outputDir.mkdir();
+
+    // test
+    service.decompressZip(zipFile, "glob:*.jar", outputDir);
+
+    // assert
+    assertThat(new File(outputDir, "foo.jar")).isFile();
+    assertThat(new File(outputDir, "bar.txt")).doesNotExist();
+  }
+
   private byte[] tarEntry(String name, byte[] content) {
     var header = new byte[512];
     var nameBytes = name.getBytes(StandardCharsets.UTF_8);
