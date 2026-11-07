@@ -62,6 +62,7 @@ public class MainTest extends AbstractTest {
   @Test
   public void shutdownWithoutConfig() {
     var starter = org.mockito.Mockito.mock(Starter.class);
+    org.mockito.Mockito.when(starter.isFinish()).thenReturn(false, true);
     main.addKey("key1", "com.uchicom.hoge.Main", "service");
     main.getPortMap().get("service").getList().get(0).getStarterList().add(starter);
 
@@ -131,6 +132,7 @@ public class MainTest extends AbstractTest {
   @Test
   public void removeKeyStopsStarterAndSchedule() throws Exception {
     var starter = org.mockito.Mockito.mock(Starter.class);
+    org.mockito.Mockito.when(starter.isFinish()).thenReturn(false, true);
     var schedule = org.mockito.Mockito.mock(com.uchicom.plate.scheduler.Schedule.class);
     main.addKey("key1", "com.uchicom.hoge.Main", "service");
     var keyInfo = main.getPortMap().get("service").getList().get(0);
@@ -150,6 +152,7 @@ public class MainTest extends AbstractTest {
     var keyInfo = main.getPortMap().get("service").getList().get(0);
     keyInfo.setStatus(com.uchicom.plate.enumeration.KeyState.ENABLE);
     var old = org.mockito.Mockito.mock(Starter.class);
+    org.mockito.Mockito.when(old.isFinish()).thenReturn(false, true);
     keyInfo.getStarterList().add(old);
 
     main.restartKey("service", "key1");
@@ -176,5 +179,94 @@ public class MainTest extends AbstractTest {
 
     assertThat(file).doesNotExist();
     assertThat(new File(dir, "ERR_v1.txt")).exists();
+  }
+
+  private Starter newService(String... params) {
+    FixtureService.shutdownCount = 0;
+    FixtureService.failShutdown = false;
+    main.addKey("fx", "com.uchicom.plate.FixtureService", "service");
+    var keyInfo = main.getPortMap().get("service").getList().get(0);
+    keyInfo.shutdownMethodName = "shutdown";
+    keyInfo.setStatus(com.uchicom.plate.enumeration.KeyState.ENABLE);
+    var starter = keyInfo.create(params, Starter.StarterKind.SERVICE);
+    starter.setStarted(true);
+    return starter;
+  }
+
+  @Test
+  public void serviceStaysAliveAfterMainReturnsAndShutdownFinishes() {
+    var starter = newService();
+
+    starter.run();
+
+    assertThat(starter.isFinish()).isFalse();
+    assertThat(starter.isAlive()).isTrue();
+    starter.shutdown();
+    assertThat(FixtureService.shutdownCount).isEqualTo(1);
+    assertThat(starter.isFinish()).isTrue();
+  }
+
+  @Test
+  public void mainShutdownCallsShutdownMethodOfRunningService() {
+    newService().run();
+
+    main.shutdown();
+
+    assertThat(FixtureService.shutdownCount).isEqualTo(1);
+  }
+
+  @Test
+  public void restartKeyCallsShutdownMethod() throws Exception {
+    newService().run();
+
+    main.restartKey("service", "fx");
+
+    assertThat(FixtureService.shutdownCount).isEqualTo(1);
+    assertThat(main.getPortMap().get("service").getList().get(0).getStarterList()).hasSize(1);
+  }
+
+  @Test
+  public void restartKeyDoesNotRestartWhenShutdownFails() {
+    var starter = newService();
+    starter.run();
+    FixtureService.failShutdown = true;
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> main.restartKey("service", "fx"))
+        .isInstanceOf(com.uchicom.plate.exception.CmdException.class);
+
+    var list = main.getPortMap().get("service").getList().get(0).getStarterList();
+    assertThat(list).containsExactly(starter);
+    assertThat(starter.isFinish()).isFalse();
+  }
+
+  @Test
+  public void serviceWithoutShutdownMethodFinishesWhenMainReturns() {
+    var starter = newService();
+    main.getPortMap().get("service").getList().get(0).shutdownMethodName = null;
+
+    starter.run();
+
+    assertThat(starter.isFinish()).isTrue();
+  }
+
+  @Test
+  public void serviceFinishesWhenMainThrows() {
+    var starter = newService("error");
+
+    starter.run();
+
+    assertThat(starter.isFinish()).isTrue();
+  }
+
+  @Test
+  public void serviceDoesNotClearLogAndDriverRightAfterMain() {
+    var starter = org.mockito.Mockito.spy(newService());
+
+    starter.run();
+
+    org.mockito.Mockito.verify(starter, org.mockito.Mockito.never())
+        .clearLog(org.mockito.ArgumentMatchers.any());
+    org.mockito.Mockito.verify(starter, org.mockito.Mockito.never())
+        .clearDriver(org.mockito.ArgumentMatchers.any());
   }
 }
