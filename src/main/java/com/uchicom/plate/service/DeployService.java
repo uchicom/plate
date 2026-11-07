@@ -137,7 +137,7 @@ public class DeployService {
       // 通常ファイルのみ書き込む(ディレクトリ・シンボリックリンク等は対象外)
       boolean regular = (fileType == '0' || fileType == 0) && outFile != null;
       long remaining = fileSize;
-      if (regular && matcher.matches(Path.of(fileName))) {
+      if (regular && matcher.matches(Path.of(fileName).normalize())) {
         if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
 
         try (var out = new FileOutputStream(outFile)) {
@@ -180,7 +180,7 @@ public class DeployService {
         // 展開先ディレクトリ外への書き込みを拒否(Zip Slip対策)
         var outFile = resolveEntry(outputDir, name);
         if (outFile != null && !entry.isDirectory()) {
-          boolean matches = matcher.matches(Path.of(name));
+          boolean matches = matcher.matches(Path.of(name).normalize());
           if (matches) {
             if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
             try (var out = new FileOutputStream(outFile)) {

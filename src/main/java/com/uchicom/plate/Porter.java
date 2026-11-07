@@ -2,6 +2,7 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.enumeration.CpState;
+import java.io.IOException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,10 +48,28 @@ public class Porter { // implements Runnable {
 
   public void build() {
     if (cpList.size() > 0) {
-      classLoader = new URLClassLoader(CpInfo.toUrlArray(cpList, CpState.INCLUDED));
+      var urls = CpInfo.toUrlArray(cpList, CpState.INCLUDED);
+      closeClassLoader();
+      classLoader = new URLClassLoader(urls);
     }
     for (KeyInfo key : list) {
       key.build();
+    }
+  }
+
+  /** 旧ClassLoaderをcloseしてMetaspaceリークとjarのファイルロックを防ぐ。 */
+  void closeClassLoader() {
+    if (classLoader == null) {
+      return;
+    }
+    try {
+      classLoader.close();
+    } catch (IOException e) {
+      if (plate != null) {
+        plate.stackTrace("ClassLoader close error", e);
+      }
+    } finally {
+      classLoader = null;
     }
   }
 
