@@ -269,4 +269,38 @@ public class MainTest extends AbstractTest {
     org.mockito.Mockito.verify(starter, org.mockito.Mockito.never())
         .clearDriver(org.mockito.ArgumentMatchers.any());
   }
+
+  @Test
+  public void validateDefaultsOrderAndMethod() {
+    var service = new com.uchicom.plate.dto.ServicesDto();
+    service.key = "s";
+    service.className = "a.B";
+    service.order = null;
+    service.method = null;
+    var config = new PlateConfig();
+    config.service = new com.uchicom.plate.dto.ServiceDto();
+    config.service.services = java.util.List.of(service);
+
+    main.validate(config);
+
+    assertThat(service.order).isNotNull();
+    assertThat(service.method.startup).isEqualTo("main");
+  }
+
+  @Test
+  public void validateInvalidCronThrows() {
+    var batch = new com.uchicom.plate.dto.BatchesDto();
+    batch.key = "b";
+    batch.className = "a.B";
+    batch.schedule = new com.uchicom.plate.dto.ScheduleDto();
+    batch.schedule.cron = "bad";
+    org.mockito.Mockito.when(scheduleFactory.create("bad"))
+        .thenThrow(new IllegalArgumentException("bad cron"));
+    var config = new PlateConfig();
+    config.batch = new com.uchicom.plate.dto.BatchDto();
+    config.batch.batches = java.util.List.of(batch);
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> main.validate(config))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
 }

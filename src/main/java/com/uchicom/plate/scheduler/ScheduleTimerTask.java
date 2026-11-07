@@ -17,7 +17,11 @@ public class ScheduleTimerTask extends TimerTask {
   @Override
   public void run() {
     try {
-      starter.run();
+      var key = starter.getStartingKey();
+      // disableのキーは実行せずスケジュールだけ維持する
+      if (key == null || key.status.isEnable()) {
+        starter.run();
+      }
     } catch (Throwable t) {
       starter.stackTrace("Starter run error", t);
     } finally {

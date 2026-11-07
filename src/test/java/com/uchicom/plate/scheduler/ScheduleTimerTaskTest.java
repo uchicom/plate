@@ -26,4 +26,21 @@ public class ScheduleTimerTaskTest {
     assertThatCode(task::run).doesNotThrowAnyException();
     verify(starter).stackTrace(eq("Schedule register error"), any(Throwable.class));
   }
+
+  @Test
+  public void runSkipsWhenDisabledAndRunsWhenEnabled() {
+    var keyInfo = new com.uchicom.plate.KeyInfo("k");
+    var starter = mock(Starter.class);
+    org.mockito.Mockito.when(starter.getStartingKey()).thenReturn(keyInfo);
+    var schedule = mock(Schedule.class);
+    var task = new ScheduleTimerTask(schedule, starter);
+
+    task.run();
+    org.mockito.Mockito.verify(starter, org.mockito.Mockito.never()).run();
+    verify(schedule).register();
+
+    keyInfo.setStatus(com.uchicom.plate.enumeration.KeyState.ENABLE);
+    task.run();
+    verify(starter).run();
+  }
 }
