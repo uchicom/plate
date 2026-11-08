@@ -303,4 +303,25 @@ public class MainTest extends AbstractTest {
     org.assertj.core.api.Assertions.assertThatThrownBy(() -> main.validate(config))
         .isInstanceOf(IllegalArgumentException.class);
   }
+
+  @Test
+  public void stopAll_closesClassLoaders() throws Exception {
+    main.addKey("k", "a.B", "main", "p");
+    var porter = main.getPortMap().get("p");
+    var keyInfo = porter.getList().get(0);
+    var cpInfo = new CpInfo(new File("a.jar").toURI().toString());
+    porter.addCp(cpInfo);
+    keyInfo.addCp(cpInfo);
+    porter.build();
+    var porterLoader = porter.getClassLoader();
+    var keyLoader = keyInfo.getClassLoader();
+    assertThat(porterLoader).isNotNull();
+    assertThat(keyLoader).isNotNull();
+
+    main.stopAll();
+
+    assertThat(porter.getClassLoader()).isNull();
+    assertThat(keyInfo.getClassLoader()).isNull();
+    assertThat(main.getPortMap()).isEmpty();
+  }
 }

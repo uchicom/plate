@@ -36,4 +36,22 @@ public class PorterTest {
     // assert: ローダー未生成でも例外にならない
     assertThat(porter.getClassLoader()).isNull();
   }
+
+  @Test
+  public void isRunning() {
+    var main = mock(Main.class);
+    var porter = new Porter(main);
+    var key = new KeyInfo("k", "a.B", "main", main);
+    key.setPorter(porter);
+    porter.getList().add(key);
+    var starter = key.create(null, Starter.StarterKind.SERVICE);
+    assertThat(porter.isRunning()).isFalse();
+
+    starter.setStarted(true);
+    assertThat(porter.isRunning()).isTrue();
+    assertThat(key.isRunning()).isTrue();
+
+    starter.setFinish(true);
+    assertThat(porter.isRunning()).isFalse();
+  }
 }

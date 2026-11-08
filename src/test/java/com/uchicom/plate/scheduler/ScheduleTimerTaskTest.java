@@ -43,4 +43,19 @@ public class ScheduleTimerTaskTest {
     task.run();
     verify(starter).run();
   }
+
+  @Test
+  public void runSetsStartedBeforeRun() {
+    var keyInfo = new com.uchicom.plate.KeyInfo("k");
+    keyInfo.setStatus(com.uchicom.plate.enumeration.KeyState.ENABLE);
+    var starter = mock(Starter.class);
+    org.mockito.Mockito.when(starter.getStartingKey()).thenReturn(keyInfo);
+    var task = new ScheduleTimerTask(mock(Schedule.class), starter);
+
+    task.run();
+
+    var order = org.mockito.Mockito.inOrder(starter);
+    order.verify(starter).setStarted(true);
+    order.verify(starter).run();
+  }
 }
