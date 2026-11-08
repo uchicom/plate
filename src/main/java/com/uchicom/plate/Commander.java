@@ -16,6 +16,7 @@ import com.uchicom.plate.cmd.key.ManualCmd;
 import com.uchicom.plate.cmd.key.RemoveCmd;
 import com.uchicom.plate.cmd.key.RemoveCpCmd;
 import com.uchicom.plate.cmd.key.RenameCmd;
+import com.uchicom.plate.cmd.key.StatusCmd;
 import com.uchicom.plate.cmd.key.StopCmd;
 import com.uchicom.plate.cmd.port.AddPortCpCmd;
 import com.uchicom.plate.cmd.port.RemovePortCpCmd;
@@ -113,6 +114,7 @@ public class Commander implements Runnable {
     cmdList.add(new EnableCmd(this));
     cmdList.add(new DisableCmd(this));
     cmdList.add(new CallCmd(this));
+    cmdList.add(new StatusCmd(this));
     cmdList.add(new AddCpCmd(this));
     cmdList.add(new RemoveCpCmd(this));
     cmdList.add(new RenameCmd(this));

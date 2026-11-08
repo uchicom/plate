@@ -8,6 +8,8 @@ import com.uchicom.plate.enumeration.RecoveryMethod;
 import com.uchicom.plate.scheduler.Schedule;
 import com.uchicom.plate.util.PriorityClassLoader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,12 @@ public class KeyInfo {
   private String methodName;
 
   public String shutdownMethodName;
+
+  /** 状況取得のスタティックメソッド名(引数なしでStringを返す)。nullの場合は未対応。 */
+  public String statusMethodName = "status";
+
+  /** 状況の最大文字数 */
+  static final int MAX_STATUS_LENGTH = 64 * 1024;
 
   private Schedule schedule;
 
@@ -221,5 +229,52 @@ public class KeyInfo {
       return porter.loadClass(className);
     }
     return classLoader.loadClass(className);
+  }
+
+  /**
+   * アプリの状況取得メソッド(引数なしのstaticメソッド)を呼び出して結果の文字列を返す。
+   *
+   * <p>例外は呼び出し元に伝播させず"error: ..."として返す。改行は\r\nに正規化し、長すぎる場合は切り詰める。
+   */
+  public String getStatus() {
+    if (statusMethodName == null) {
+      return "(not supported)";
+    }
+    if (!isRunning()) {
+      return "not running";
+    }
+    var thread = Thread.currentThread();
+    var originalClassLoader = thread.getContextClassLoader();
+    try {
+      var clazz = loadClass();
+      var method = clazz.getMethod(statusMethodName);
+      if (!Modifier.isStatic(method.getModifiers())) {
+        return "error: " + statusMethodName + " is not static";
+      }
+      // Starter.invokeと同様に、呼び出し先のクラスローダをコンテキストクラスローダにする
+      thread.setContextClassLoader(clazz.getClassLoader());
+      return normalizeStatus(String.valueOf(method.invoke(null)));
+    } catch (NoSuchMethodException e) {
+      return "(not supported)";
+    } catch (InvocationTargetException e) {
+      return "error: " + describe(e.getCause() != null ? e.getCause() : e);
+    } catch (Exception | LinkageError e) {
+      return "error: " + describe(e);
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
+  }
+
+  private static String describe(Throwable t) {
+    var name = t.getClass().getName();
+    return normalizeStatus(t.getMessage() == null ? name : name + ": " + t.getMessage());
+  }
+
+  static String normalizeStatus(String text) {
+    var normalized = text.replace("\r\n", "\n").replace('\r', '\n').replace("\n", "\r\n");
+    if (normalized.length() > MAX_STATUS_LENGTH) {
+      return normalized.substring(0, MAX_STATUS_LENGTH) + "...(truncated)";
+    }
+    return normalized;
   }
 }
