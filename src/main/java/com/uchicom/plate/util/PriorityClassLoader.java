@@ -1,8 +1,12 @@
 // (C) 2026 uchicom
 package com.uchicom.plate.util;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 
 public class PriorityClassLoader extends URLClassLoader {
   public PriorityClassLoader(URL[] urls, ClassLoader parent) {
@@ -16,7 +20,7 @@ public class PriorityClassLoader extends URLClassLoader {
   @Override
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     // JDKコアクラスは自身では定義できない(SecurityException)ため常に親へ委譲する
-    if (name.startsWith("java.")) {
+    if (isParentOnly(name)) {
       return super.loadClass(name, resolve);
     }
     synchronized (getClassLoadingLock(name)) {
@@ -35,6 +39,46 @@ public class PriorityClassLoader extends URLClassLoader {
       }
       return c;
     }
+  }
+
+  /** JDKのクラス・リソースは常に親へ委譲する(jar同梱による隠蔽防止、性能面)。 */
+  private static boolean isParentOnly(String name) {
+    return name.startsWith("java.")
+        || name.startsWith("javax.")
+        || name.startsWith("jdk.")
+        || name.startsWith("sun.")
+        || name.startsWith("java/")
+        || name.startsWith("javax/")
+        || name.startsWith("jdk/")
+        || name.startsWith("sun/");
+  }
+
+  @Override
+  public URL getResource(String name) {
+    if (isParentOnly(name)) {
+      return super.getResource(name);
+    }
+    var url = findResource(name);
+    if (url != null) {
+      return url;
+    }
+    return super.getResource(name);
+  }
+
+  @Override
+  public Enumeration<URL> getResources(String name) throws IOException {
+    if (isParentOnly(name)) {
+      return super.getResources(name);
+    }
+    var urls = new ArrayList<URL>();
+    urls.addAll(Collections.list(findResources(name)));
+    var parent = getParent();
+    if (parent != null) {
+      urls.addAll(Collections.list(parent.getResources(name)));
+    } else {
+      urls.addAll(Collections.list(ClassLoader.getSystemResources(name)));
+    }
+    return Collections.enumeration(urls);
   }
 
   @Override
