@@ -39,6 +39,12 @@ public class CmdSocketHandler implements Handler {
 
   private final Main plate;
 
+  /** 確認待ちのコマンド(切断時はハンドラーごと破棄される) */
+  private AbstractCmd pendingCmd = null;
+
+  /** 確認待ちのコマンドのパラメータ */
+  private String[] pendingParams = null;
+
   public CmdSocketHandler(SocketChannel socketChannel, Main plate) {
     this.socketChannel = socketChannel;
     this.plate = plate;
@@ -150,8 +156,19 @@ public class CmdSocketHandler implements Handler {
   private void executeLine() throws IOException {
     String cmdLine = cmdBuff.toString();
     cmdBuff.setLength(0);
-    // 改行のみは次行へ
-    if (cmdLine.length() > 0) {
+    if (pendingCmd != null) {
+      // 確認待ち中は、yes/y以外の入力(空行含む)をすべてキャンセルとして扱う
+      AbstractCmd cmd = pendingCmd;
+      String[] params = pendingParams;
+      pendingCmd = null;
+      pendingParams = null;
+      if ("yes".equalsIgnoreCase(cmdLine) || "y".equalsIgnoreCase(cmdLine)) {
+        run(cmd, params);
+      } else {
+        resBuff.append("NG: canceled\r\n");
+      }
+    } else if (cmdLine.length() > 0) {
+      // 改行のみは次行へ
       Map<String, AbstractCmd> cmdMap = Commander.getInstance().getCmdMap();
       String[] cmdParams = cmdLine.split(Commander.CMD_SPRIT_CHAR, 0);
       if (cmdParams.length > 0) {
@@ -164,16 +181,12 @@ public class CmdSocketHandler implements Handler {
             // パラメータチェックしてエラーだったら
             if (cmd.checkParam(this, params)) {
               if (cmd.checkConfirm()) {
+                // 確認が必要なコマンドは保留し、次の入力行で実行可否を判断する
                 resBuff.append("execute ok ? yes/[no]\r\n");
-              }
-              try {
-                var result = cmd.execute(this, params);
-                if (result != null) {
-                  resBuff.append(result);
-                }
-                resBuff.append("OK\r\n");
-              } catch (Throwable t) {
-                resBuff.append("NG: " + t.getMessage() + "\r\n");
+                pendingCmd = cmd;
+                pendingParams = params;
+              } else {
+                run(cmd, params);
               }
             } else {
               resBuff.append("NG: parameter error\r\n");
@@ -191,6 +204,18 @@ public class CmdSocketHandler implements Handler {
       }
     }
     writeCmdLine(resBuff);
+  }
+
+  private void run(AbstractCmd cmd, String[] params) {
+    try {
+      var result = cmd.execute(this, params);
+      if (result != null) {
+        resBuff.append(result);
+      }
+      resBuff.append("OK\r\n");
+    } catch (Throwable t) {
+      resBuff.append("NG: " + t.getMessage() + "\r\n");
+    }
   }
 
   private void writeCmdLine(StringBuilder cmdBuff) throws IOException {
