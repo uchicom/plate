@@ -221,4 +221,63 @@ public class CmdSocketHandlerTest extends AbstractTest {
     assertThat(output()).contains("0123456789\r\nOK\r\nplate>");
     verify(barCmd, never()).execute(any(), any());
   }
+
+  @Test
+  void confirmCommandIsNotExecutedBeforeAnswer() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    receive("foo\r\n");
+    assertThat(output()).contains("execute ok ? yes/[no]\r\nplate>");
+    verify(fooCmd, never()).execute(any(), any());
+  }
+
+  @Test
+  void confirmCommandIsExecutedOnYes() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    receive("foo\r\n");
+    receive("yes\r\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(output()).contains("OK\r\nplate>");
+  }
+
+  @Test
+  void confirmCommandIsExecutedOnY() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    receive("foo\r\n");
+    receive("y\r\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+  }
+
+  @Test
+  void confirmCommandIsCanceledOnOtherInput() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    for (String answer : new String[] {"no", "", "foo", "yess"}) {
+      receive("foo\r\n");
+      receive(answer + "\r\n");
+    }
+    verify(fooCmd, never()).execute(any(), any());
+    assertThat(output()).contains("NG: canceled\r\nplate>");
+  }
+
+  @Test
+  void otherCommandWhilePendingIsCanceledAndNotExecuted() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    receive("foo\r\n");
+    receive("bar\r\n");
+    verify(fooCmd, never()).execute(any(), any());
+    verify(barCmd, never()).execute(any(), any());
+    assertThat(output()).contains("NG: canceled");
+    // 保留は解除されているので通常処理に戻る
+    receive("bar\r\n");
+    verify(barCmd, times(1)).execute(any(), any());
+  }
+
+  @Test
+  void pendingIsClearedAfterAnswer() throws Exception {
+    when(fooCmd.checkConfirm()).thenReturn(true);
+    receive("foo\r\n");
+    receive("yes\r\n");
+    receive("yes\r\n");
+    verify(fooCmd, times(1)).execute(any(), any());
+    assertThat(output()).contains("NG: Command not found.yes");
+  }
 }

@@ -21,6 +21,11 @@ public class StopCmd extends AbstractCmd {
   }
 
   @Override
+  public boolean checkConfirm() {
+    return true;
+  }
+
+  @Override
   public String getHelp() {
     return " " + CMD + ": A started key is stopped.(The use command is required)\r\n";
   }

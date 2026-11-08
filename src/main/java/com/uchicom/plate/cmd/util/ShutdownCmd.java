@@ -20,6 +20,11 @@ public class ShutdownCmd extends AbstractCmd {
   }
 
   @Override
+  public boolean checkConfirm() {
+    return true;
+  }
+
+  @Override
   public String getHelp() {
     return " " + CMD + ": shutdown plate server.\r\n";
   }

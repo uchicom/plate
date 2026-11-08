@@ -21,6 +21,11 @@ public class RemoveCmd extends AbstractCmd {
   }
 
   @Override
+  public boolean checkConfirm() {
+    return true;
+  }
+
+  @Override
   public String getHelp() {
     return " "
         + CMD

@@ -119,6 +119,15 @@ save config.yml
 | `download` | `download key tag` | GitHubからリリースをダウンロードする |
 | `deploy` | `deploy key tag` | ダウンロードしたファイルを配備する |
 
+## ClassLoaderの解決順
+
+キーごとのクラスパス（`addcp`）から作られる `PriorityClassLoader` は、**子（キーのjar）優先**で解決します。
+
+- クラス: まず子のクラスパスを探し、見つからなければplate側（親）へ委譲します。
+- リソース（`getResource` / `getResources` / `getResourceAsStream`、`META-INF/services` による `ServiceLoader`、設定ファイル）も同様に子→親の順です。`getResources` は子の結果の後に親の結果が続きます。
+- `java.` / `javax.` / `jdk.` / `sun.`（リソースは `java/` 等）は常に親固定です。jarに同梱されていても隠せません。
+- 既存アプリへの影響: jarに `com.uchicom.*` などplateと同じクラスやライブラリが含まれる場合、plate側ではなくjar側が使われます。重複ライブラリの優先順位が従来（親優先）から変わります。
+
 ## 設定ファイル（YAML）
 
 サンプルは [src/test/resources/config.yml](src/test/resources/config.yml) にあります。

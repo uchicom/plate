@@ -26,6 +26,11 @@ public class PurgeCmd extends AbstractCmd {
   }
 
   @Override
+  public boolean checkConfirm() {
+    return true;
+  }
+
+  @Override
   public String getHelp() {
     return " " + CMD + ": purge dead starter\r\n" + "  format)purge\r\n" + "  ex)purge\r\n";
   }
