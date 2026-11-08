@@ -92,6 +92,7 @@ save config.yml
 | `enable` | `enable key` | キーを有効にする |
 | `disable` | `disable key` | キーを無効にする |
 | `call` | `call key [param1 ..]` | キーを実行する |
+| `status` | `status [key]` | キーの状態とアプリの `status()` の戻り値を表示する（use済みならそのポート、未選択なら全ポート） |
 | `addcp` | `addcp key classPath` / `addcp key protocol host filepath` | キーにクラスパスを追加する |
 | `removecp` | `removecp key classPath` | キーからクラスパスを削除する |
 
@@ -142,6 +143,7 @@ service:
 		method:
 			startup: main                  # 既定 main
 			shutdown: shutdown
+			status: status                 # 既定 status。nullで状況取得なし
 		parameters: [a, b, c, d]
 		disabled: false                  # 既定 false
 		recovery: true                   # 既定 true
@@ -185,6 +187,15 @@ release:
 - shutdownメソッドは「戻った時点でアプリのスレッドがすべて停止している（同期停止）」ことを前提とします。
 - `method.shutdown` を持たないサービスと、バッチは `main` が戻った時点で終了扱いになります。
 - 停止に失敗した場合、自動デプロイによる再起動などは二重起動を避けるため中止されエラーになります。
+
+### 状況の表示（status）
+
+`status [key]` は、キー・状態（ENABLE/DISABLE）・稼働状況（`alive`）に続けて、アプリの状況取得メソッドの戻り値を表示します。
+
+- アプリ側は引数なしの `public static String status()` を用意します（メソッド名は `method.status` で変更可）。クラスローダーをまたぐため、戻り値は `String` のみです。未起動時の扱いはplate側で `not running` を表示するため、アプリ側での考慮は不要です。
+- 稼働中のキーのみ呼び出します。停止中は `not running`、`method.status` が未設定またはメソッドが存在しない場合は `(not supported)` を表示します。
+- アプリ側で例外が発生した場合は、そのキーだけ `error: ...` を表示し、他のキーの表示は続行します。
+- 戻り値の改行は `\r\n` に正規化し、64KBを超える場合は切り詰めます。呼び出しはTelnet処理のスレッドで同期実行するため、時間のかかる処理は避けてください。
 
 `schedule` の `minute`、`hour`、`day`、`month` による個別指定もサンプルにありますが、`dayOfWeek` は未対応です。
 
