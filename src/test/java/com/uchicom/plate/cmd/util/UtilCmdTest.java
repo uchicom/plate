@@ -196,4 +196,16 @@ public class UtilCmdTest extends AbstractCmdTest {
     var actual = cmd.execute(handler, new String[] {});
     assertThat(actual).startsWith("Command List\r\n").contains(a.getHelp()).contains(b.getHelp());
   }
+
+  @Test
+  public void build_execute_running() {
+    usePort();
+    var porter = mock(Porter.class);
+    when(porter.isRunning()).thenReturn(true);
+    when(main.getPortMap()).thenReturn(Map.of(PORT, porter));
+
+    assertThatThrownBy(() -> new BuildCmd(broker).execute(handler, new String[] {}))
+        .isInstanceOf(CmdException.class);
+    verify(porter, org.mockito.Mockito.never()).build();
+  }
 }

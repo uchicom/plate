@@ -20,6 +20,8 @@ public class ScheduleTimerTask extends TimerTask {
       var key = starter.getStartingKey();
       // disableのキーは実行せずスケジュールだけ維持する
       if (key == null || key.status.isEnable()) {
+        // Mainを経由しないため、実行中判定(isAlive)用にstartedを立てる
+        starter.setStarted(true);
         starter.run();
       }
     } catch (Throwable t) {

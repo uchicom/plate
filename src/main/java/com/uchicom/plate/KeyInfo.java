@@ -163,6 +163,11 @@ public class KeyInfo {
     }
   }
 
+  /** 稼働中のStarterがあるか。 */
+  public boolean isRunning() {
+    return starterList.stream().anyMatch(Starter::isAlive);
+  }
+
   public Schedule getSchedule() {
     return schedule;
   }

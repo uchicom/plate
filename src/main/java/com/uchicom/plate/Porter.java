@@ -57,6 +57,19 @@ public class Porter { // implements Runnable {
     }
   }
 
+  /** いずれかのキーに稼働中のStarterがあるか。 */
+  public boolean isRunning() {
+    return list.stream().anyMatch(KeyInfo::isRunning);
+  }
+
+  /** ポートとキーのClassLoaderを全てcloseする(Starter停止後に呼ぶ)。 */
+  void closeAllClassLoaders() {
+    for (KeyInfo key : list) {
+      key.closeClassLoader();
+    }
+    closeClassLoader();
+  }
+
   /** 旧ClassLoaderをcloseしてMetaspaceリークとjarのファイルロックを防ぐ。 */
   void closeClassLoader() {
     if (classLoader == null) {

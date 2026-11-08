@@ -51,6 +51,9 @@ public class BuildCmd extends AbstractCmd {
       throw new CmdException("ポート番号は存在しません." + port);
     }
     var porter = portMap.get(port);
+    if (porter.isRunning()) {
+      throw new CmdException("稼働中のStarterがあるためビルドできません.停止してから実行してください." + port);
+    }
     porter.build();
     return null;
   }

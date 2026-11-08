@@ -624,6 +624,7 @@ public class Main {
       watchThread.interrupt();
       watchThread = null;
     }
+    portMap.values().forEach(Porter::closeAllClassLoaders);
     portMap.clear();
   }
 
