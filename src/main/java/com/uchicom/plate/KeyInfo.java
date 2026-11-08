@@ -6,9 +6,9 @@ import com.uchicom.plate.enumeration.CpState;
 import com.uchicom.plate.enumeration.KeyState;
 import com.uchicom.plate.enumeration.RecoveryMethod;
 import com.uchicom.plate.scheduler.Schedule;
+import com.uchicom.plate.util.PriorityClassLoader;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,11 +57,11 @@ public class KeyInfo {
 
   private List<CpInfo> cpList = new ArrayList<CpInfo>();
 
-  private URLClassLoader classLoader = null;
+  private PriorityClassLoader classLoader = null;
 
   private final Main plate;
 
-  public URLClassLoader getClassLoader() {
+  public PriorityClassLoader getClassLoader() {
     return classLoader;
   }
 
@@ -140,9 +140,9 @@ public class KeyInfo {
       URL[] urls = CpInfo.toUrlArray(cpList, CpState.INCLUDED);
       closeClassLoader();
       if (porter.getClassLoader() != null) {
-        classLoader = new URLClassLoader(urls, porter.getClassLoader());
+        classLoader = new PriorityClassLoader(urls, porter.getClassLoader());
       } else {
-        classLoader = new URLClassLoader(urls);
+        classLoader = new PriorityClassLoader(urls);
       }
     }
   }

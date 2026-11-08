@@ -2,8 +2,8 @@
 package com.uchicom.plate;
 
 import com.uchicom.plate.enumeration.CpState;
+import com.uchicom.plate.util.PriorityClassLoader;
 import java.io.IOException;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +24,7 @@ public class Porter { // implements Runnable {
   private List<CpInfo> cpList = new ArrayList<>();
 
   /** ポートのクラスローダー */
-  URLClassLoader classLoader;
+  PriorityClassLoader classLoader;
 
   public Porter(Main plate) {
     this.plate = plate;
@@ -50,7 +50,7 @@ public class Porter { // implements Runnable {
     if (cpList.size() > 0) {
       var urls = CpInfo.toUrlArray(cpList, CpState.INCLUDED);
       closeClassLoader();
-      classLoader = new URLClassLoader(urls);
+      classLoader = new PriorityClassLoader(urls);
     }
     for (KeyInfo key : list) {
       key.build();
@@ -86,7 +86,7 @@ public class Porter { // implements Runnable {
     }
   }
 
-  public URLClassLoader getClassLoader() {
+  public PriorityClassLoader getClassLoader() {
     return classLoader;
   }
 
